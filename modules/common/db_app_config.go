@@ -51,5 +51,31 @@ type appConfigModel struct {
 	RegisterUserMustCompleteInfoOn int    // 注册用户是否必须完善个人信息
 	ChannelPinnedMessageMaxCount   int    // 频道置顶消息最大数量
 	CanModifyApiUrl                int    // 是否可以修改API地址
+
+	IpWhiteList                            string // 后台IP白名单
+	LoginType                              int    // app登录类型
+	SensitiveWords                         string // 敏感词 (多个敏感词用英文的 | 符号分割)
+	DisableChangeDevice                    int    // 是否禁止更换设备: 1 禁止、0 不禁止
+	SignupDeviceLimit                      int    // 设备限制注册限制数, 0为不限制
+	SigleIpRegisterLimitIn12hour           int    // 单IP12小时注册限制数, 0为不限制
+	AutoClearHistoryMsg                    int    // 自动清除几天前历史消息, 0 不自动清除
+	SigninAuthCodeVisible                  int    // 登录授权码是否可见
+	FriendOnlineStatusVisible              int    // 好友在线状态是否可见
+	MobileMsgReadStatusVisible             int    // 手机消息已读状态是否可见
+	WalletPayoutMin                        int    // 钱包提现最小金额，单位为分，0为不限制
+	TransferMinAmount                      int    // 转账最小金额，单位为分，0为不限制
+	MobileEditMsg                          int    // 手机端是否可以编辑消息
+	GroupMemberSeeMember                   int    // 普通群成员是否可以查看其他群成员
+	MsgTimeVisible                         int    // 消息时间是否可见
+	PinnedConversationSync                 int    // 置顶会话是否同步
+	OnlyInternalFriendAdd                  int    // 仅内部号可被加好友及加非内部号好友
+	OnlyInternalFriendCreateGroup          int    // 仅内部号可建群
+	OnlyInternalFriendSendGroupRedEnvelope int    // 仅内部号可发群红包
+	OnlyInternalFriendSendGroupCard        int    // 仅内部号可群内推送名片
+	OnlyInternalFriendGroupRobotFreeMsg    int    // 群机器人免消息
+	GroupMemberLimit                       int    // 群人数限制: 0 不限制
+	UserAgreementContent                   string // 用户协议内容
+	PrivacyPolicyContent                   string // 隐私政策内容
+
 	ldb.BaseModel
 }

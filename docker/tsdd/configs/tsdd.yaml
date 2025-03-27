@@ -3,10 +3,10 @@
 mode: "debug" #   运行模式 debug or release
 #addr: ":8090" # api监听地址
 #grpcAddr: "0.0.0.0:6979" # webhook grpc监听地址 给悟空IM提供的
-#appName: "唐僧叨叨" # 项目名称
+appName: "飞宏通讯" # 项目名称
 #rootDir: "" # 数据根目录
-#messageSaveAcrossDevice: true # 消息是否跨设备保存（换设备登录消息是否还能同步到老消息）
-#welcomeMessage: "欢迎使用{{appName}}" # 欢迎消息
+messageSaveAcrossDevice: true # 消息是否跨设备保存（换设备登录消息是否还能同步到老消息）
+welcomeMessage: "欢迎使用{{appName}}" # 欢迎消息
 #phoneSearchOff: true # 关闭手机号搜索用户功能
 #onlineStatusOn: true # 开启在线状态功能
 #groupUpgradeWhenMemberCount: 1000 # 群组人数达到多少人时，群组自动升级为超级群组
@@ -22,7 +22,7 @@ db:
  mysqlAddr: "root:#MYSQL_ROOT_PASSWORD#@tcp(mysql)/im?charset=utf8mb4&parseTime=true&loc=Local" # mysql连接地址
  redisAddr: "redis:6379" # redis地址
  #sqlDir: "assets/sql" # 数据库脚本路径
- #migration: true #  是否合并数据库
+ migration: true #  是否合并数据库
  #asynctaskRedisAddr: "" # 异步任务的redis地址 不写默认为RedisAddr的地址
 
 ##################### 外网配置 ####################

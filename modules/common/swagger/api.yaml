@@ -60,6 +60,96 @@ paths:
               can_modify_api_url:
                 type: integer
                 description: "是否允许修改api地址 1.允许"
+              ip_white_list:
+                type: string
+                description: "ip白名单"
+              login_type:
+                type: string
+                description: "登录类型"
+              sensitive_words:
+                type: string
+                description: "敏感词"
+              disable_change_device:
+                type: integer
+                description: "是否禁止更换设备 1.禁止"
+              signup_device_limit:
+                type: integer
+                description: "设备限制注册限制数"
+              sigle_ip_register_limit_in_12hour:
+                type: integer
+                description: "单IP12小时注册限制数"
+              auto_clear_history_msg:
+                type: integer
+                description: "自动清除几天前历史消息"
+              signup_invite_code_visible:
+                type: integer
+                description: "注册邀请码是否可见 1.是"
+              signin_auth_code_visible:
+                type: integer
+                description: "登录授权码是否可见 1.是"
+              friend_online_status_visible:
+                type: integer
+                description: "好友在线状态是否可见 1.是"
+              mobile_msg_read_status_visible:
+                type: integer
+                description: "手机消息已读状态是否可见 1.是"
+              mine_wallet_visible:
+                type: integer
+                description: "我的钱包是否开启 1.是"
+              wallet_payout_min:
+                type: integer
+                description: "钱包提现最小金额"
+              red_envelope_visible:
+                type: integer
+                description: "红包模块是否开启 1.是"
+              transfer_visible:
+                type: integer
+                description: "转账模块是否开启 1.是"
+              transfer_min_amount:
+                type: integer
+                description: "转账最小金额"
+              mobile_edit_msg:
+                type: integer
+                description: "手机端是否可以编辑消息 1.是"
+              group_member_see_member:
+                type: integer
+                description: "普通群成员是否可以查看其他群成员 1.是"
+              sign_red_envelope_visible:
+                type: integer
+                description: "签到红包模块是否开启 1.是"
+              msg_time_visible:
+                type: integer
+                description: "消息时间是否可见 1.是"
+              pinned_conversation_sync:
+                type: integer
+                description: "置顶会话是否同步 1.是"
+              only_internal_friend_add:
+                type: integer
+                description: "仅内部号可被加好友及加非内部号好友 1.是"
+              only_internal_friend_create_group:
+                type: integer
+                description: "仅内部号可建群 1.是"
+              only_internal_friend_send_group_red_envelope:
+                type: integer
+                description: "仅内部号可发群红包 1.是"
+              only_internal_friend_send_group_card:
+                type: integer
+                description: "仅内部号可群内推送名片 1.是"
+              only_internal_friend_group_robot_free_msg:
+                type: integer
+                description: "仅内部号群机器人免消息 1.是"
+              group_member_limit:
+                type: integer
+                description: "群人数限制"
+              user_agreement_content:
+                type: string
+                description: "用户协议内容"
+              privacy_policy_content:
+                type: string
+                description: "隐私政策内容"
+              moments_visible:
+                type: integer
+                description: "好友分享是否可见 1.是"  
         400:
           description: "错误"
           schema:
@@ -86,13 +176,13 @@ paths:
             properties:
               revoke_second:
                 type: integer
-                description: "消息撤回限制（单位秒）"
+                description: "消息撤回时间限制（单位秒）"
               welcome_message:
                 type: string
                 description: "登录欢迎语"
               new_user_join_system_group:
                 type: integer
-                description: "新用户是否加入群聊 1.是"
+                description: "注册用户是否加入系统群 1.是"
               search_by_phone:
                 type: integer
                 description: "是否开启手机号搜索 1.是"
@@ -114,6 +204,81 @@ paths:
               can_modify_api_url:
                 type: integer
                 description: "是否允许修改api地址 1.允许"
+              ip_white_list:
+                type: string
+                description: "ip白名单"
+              login_type:
+                type: string
+                description: "登录类型"
+              sensitive_words:
+                type: string
+                description: "敏感词"
+              disable_change_device:
+                type: integer
+                description: "是否禁止更换设备 1.禁止"
+              signup_device_limit:
+                type: integer
+                description: "设备限制注册限制数"
+              sigle_ip_register_limit_in_12hour:
+                type: integer
+                description: "单IP12小时注册限制数"
+              auto_clear_history_msg:
+                type: integer
+                description: "自动清除几天前历史消息"
+              signin_auth_code_visible:
+                type: integer
+                description: "登录授权码是否可见 1.是"
+              friend_online_status_visible:
+                type: integer
+                description: "好友在线状态是否可见 1.是"
+              mobile_msg_read_status_visible:
+                type: integer
+                description: "手机消息已读状态是否可见 1.是"
+              wallet_payout_min:
+                type: integer
+                description: "钱包提现最小金额"
+              transfer_visible:
+                type: integer
+                description: "转账模块是否开启 1.是"
+              transfer_min_amount:
+                type: integer
+                description: "转账最小金额"
+              mobile_edit_msg:
+                type: integer
+                description: "手机端是否可以编辑消息 1.是"
+              group_member_see_member:
+                type: integer
+                description: "普通群成员是否可以查看其他群成员 1.是"
+              msg_time_visible:
+                type: integer
+                description: "消息时间是否可见 1.是"
+              pinned_conversation_sync:
+                type: integer
+                description: "置顶会话是否同步 1.是"
+              only_internal_friend_add:
+                type: integer
+                description: "仅内部号可被加好友及加非内部号好友 1.是"
+              only_internal_friend_create_group:
+                type: integer
+                description: "仅内部号可建群 1.是"
+              only_internal_friend_send_group_red_envelope:
+                type: integer
+                description: "仅内部号可发群红包 1.是"
+              only_internal_friend_send_group_card:
+                type: integer
+                description: "仅内部号可群内推送名片 1.是"
+              only_internal_friend_group_robot_free_msg:
+                type: integer
+                description: "仅内部号群机器人免消息 1.是"
+              group_member_limit:
+                type: integer
+                description: "群人数限制"
+              user_agreement_content:
+                type: string
+                description: "用户协议内容"
+              privacy_policy_content:
+                type: string
+                description: "隐私政策内容"
       responses:
         200:
           description: "返回"

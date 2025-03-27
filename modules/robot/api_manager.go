@@ -27,7 +27,7 @@ func NewManager(ctx *config.Context) *Manager {
 
 // 路由配置
 func (m *Manager) Route(r *wkhttp.WKHttp) {
-	auth := r.Group("/v1/manager", m.ctx.AuthMiddleware(r))
+	auth := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r))
 	{
 		auth.GET("/robot/menus", m.list)                                 // 机器人菜单
 		auth.DELETE("/robot/:robot_id/:id", m.delete)                    // 删除某个机器人菜单

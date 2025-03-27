@@ -52,11 +52,11 @@ func NewManager(ctx *config.Context) *Manager {
 
 // Route 配置路由规则
 func (m *Manager) Route(r *wkhttp.WKHttp) {
-	user := r.Group("/v1/manager")
+	user := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r))
 	{
 		user.POST("/login", m.login) // 账号登录
 	}
-	auth := r.Group("/v1/manager", m.ctx.AuthMiddleware(r))
+	auth := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r))
 	{
 		auth.POST("/user/admin", m.addAdminUser)              // 添加一个管理员
 		auth.GET("/user/admin", m.getAdminUsers)              // 查询管理员用户

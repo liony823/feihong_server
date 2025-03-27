@@ -44,6 +44,8 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
+replace github.com/TangSengDaoDao/TangSengDaoDaoServerLib => github.com/liony823/feihong_server_lib v1.0.0-202503271742
+
 require (
 	cloud.google.com/go v0.110.0 // indirect
 	cloud.google.com/go/compute v1.19.1 // indirect

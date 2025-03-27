@@ -31,7 +31,7 @@ func NewManager(ctx *config.Context) *manager {
 
 // Route 路由配置
 func (m *manager) Route(r *wkhttp.WKHttp) {
-	auth := r.Group("/v1/manager/workplace", m.ctx.AuthMiddleware(r))
+	auth := r.Group("/v1/manager/workplace", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r))
 	{
 		auth.POST("/category", m.addCategory)                                    // 添加分类
 		auth.GET("/category", m.getCategory)                                     // 获取分类

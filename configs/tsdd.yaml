@@ -12,6 +12,11 @@ mode: "debug" #   运行模式 debug or release
 #groupUpgradeWhenMemberCount: 1000 # 群组人数达到多少人时，群组自动升级为超级群组
 #eventPoolSize: 100 # 事件池大小
 
+##################### 基础身份配置 ####################
+basicAuth:
+  username: "feihong" # 基础身份名称
+  password: "123456" # 基础身份uid
+
 ##################### 悟空IM配置 ####################
 #wukongIM:
 #  apiURL: "" # 悟空IM的api地址 格式： http://xx.xx.xx.xx:5001

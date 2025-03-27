@@ -303,7 +303,7 @@ func (cn *Common) appConfig(c *wkhttp.Context) {
 	}
 	versionI64, _ := strconv.ParseInt(versionStr, 10, 64)
 	if versionI64 != 0 && int(versionI64) >= appConfigM.Version {
-		c.JSON(http.StatusOK, &appConfigResp{
+		c.JSON(http.StatusOK, &AppConfigResp{
 			Version: appConfigM.Version,
 		})
 		return
@@ -323,17 +323,42 @@ func (cn *Common) appConfig(c *wkhttp.Context) {
 		revokeSecond = appConfigM.RevokeSecond
 	}
 
-	c.JSON(http.StatusOK, &appConfigResp{
-		Version:                        appConfigM.Version,
-		PhoneSearchOff:                 phoneSearchOff,
-		ShortnoEditOff:                 shortnoEditOff,
-		WebURL:                         cn.ctx.GetConfig().External.WebLoginURL,
+	c.JSON(http.StatusOK, &AppConfigResp{
+		Version:        appConfigM.Version,
+		SearchByPhone:  phoneSearchOff,
+		ShortnoEditOff: shortnoEditOff,
+		// WebURL:                         cn.ctx.GetConfig().External.WebLoginURL,
 		RevokeSecond:                   revokeSecond,
 		RegisterInviteOn:               appConfigM.RegisterInviteOn,
 		SendWelcomeMessageOn:           appConfigM.SendWelcomeMessageOn,
 		InviteSystemAccountJoinGroupOn: appConfigM.InviteSystemAccountJoinGroupOn,
 		RegisterUserMustCompleteInfoOn: appConfigM.RegisterUserMustCompleteInfoOn,
 		CanModifyApiUrl:                appConfigM.CanModifyApiUrl,
+
+		IpWhiteList:                            appConfigM.IpWhiteList,
+		LoginType:                              appConfigM.LoginType,
+		SensitiveWords:                         appConfigM.SensitiveWords,
+		DisableChangeDevice:                    appConfigM.DisableChangeDevice,
+		SignupDeviceLimit:                      appConfigM.SignupDeviceLimit,
+		SigleIpRegisterLimitIn12hour:           appConfigM.SigleIpRegisterLimitIn12hour,
+		AutoClearHistoryMsg:                    appConfigM.AutoClearHistoryMsg,
+		SigninAuthCodeVisible:                  appConfigM.SigninAuthCodeVisible,
+		FriendOnlineStatusVisible:              appConfigM.FriendOnlineStatusVisible,
+		MobileMsgReadStatusVisible:             appConfigM.MobileMsgReadStatusVisible,
+		WalletPayoutMin:                        appConfigM.WalletPayoutMin,
+		TransferMinAmount:                      appConfigM.TransferMinAmount,
+		MobileEditMsg:                          appConfigM.MobileEditMsg,
+		GroupMemberSeeMember:                   appConfigM.GroupMemberSeeMember,
+		MsgTimeVisible:                         appConfigM.MsgTimeVisible,
+		PinnedConversationSync:                 appConfigM.PinnedConversationSync,
+		OnlyInternalFriendAdd:                  appConfigM.OnlyInternalFriendAdd,
+		OnlyInternalFriendCreateGroup:          appConfigM.OnlyInternalFriendCreateGroup,
+		OnlyInternalFriendSendGroupRedEnvelope: appConfigM.OnlyInternalFriendSendGroupRedEnvelope,
+		OnlyInternalFriendSendGroupCard:        appConfigM.OnlyInternalFriendSendGroupCard,
+		OnlyInternalFriendGroupRobotFreeMsg:    appConfigM.OnlyInternalFriendGroupRobotFreeMsg,
+		GroupMemberLimit:                       appConfigM.GroupMemberLimit,
+		UserAgreementContent:                   appConfigM.UserAgreementContent,
+		PrivacyPolicyContent:                   appConfigM.PrivacyPolicyContent,
 	})
 }
 
@@ -480,20 +505,6 @@ type chatBgResp struct {
 	IsSvg       int      `json:"is_svg"`
 	LightColors []string `json:"light_colors"`
 	DarkColors  []string `json:"dark_colors"`
-}
-
-type appConfigResp struct {
-	Version                        int    `json:"version"`
-	WebURL                         string `json:"web_url"`
-	PhoneSearchOff                 int    `json:"phone_search_off"`
-	ShortnoEditOff                 int    `json:"shortno_edit_off"`
-	RevokeSecond                   int    `json:"revoke_second"`
-	AppleSignIn                    int    `json:"apple_sign_in"`
-	RegisterInviteOn               int    `json:"register_invite_on"`                  // 开启注册邀请机制
-	SendWelcomeMessageOn           int    `json:"send_welcome_message_on"`             // 开启注册登录发送欢迎语
-	InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
-	RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 注册用户必须填写完整信息
-	CanModifyApiUrl                int    `json:"can_modify_api_url"`                  // 允许修改api地址
 }
 
 type appVersionReq struct {

@@ -45,7 +45,7 @@ func NewManager(ctx *config.Context) *Manager {
 
 // Route 路由配置
 func (m *Manager) Route(r *wkhttp.WKHttp) {
-	auth := r.Group("/v1/manager", m.ctx.AuthMiddleware(r))
+	auth := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r))
 	{
 		auth.POST("/message/send", m.sendMsg)                         // 发送消息
 		auth.POST("message/sendfriends", m.sendMsgToFriends)          // 给某个用户代发消息

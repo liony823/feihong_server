@@ -67,6 +67,33 @@ func (s *service) GetAppConfig() (*AppConfigResp, error) {
 		InviteSystemAccountJoinGroupOn: appConfigM.InviteSystemAccountJoinGroupOn,
 		RegisterUserMustCompleteInfoOn: appConfigM.RegisterUserMustCompleteInfoOn,
 		ChannelPinnedMessageMaxCount:   appConfigM.ChannelPinnedMessageMaxCount,
+		CanModifyApiUrl:                appConfigM.CanModifyApiUrl,
+
+		// 新增字段
+		IpWhiteList:                            appConfigM.IpWhiteList,
+		LoginType:                              appConfigM.LoginType,
+		SensitiveWords:                         appConfigM.SensitiveWords,
+		DisableChangeDevice:                    appConfigM.DisableChangeDevice,
+		SignupDeviceLimit:                      appConfigM.SignupDeviceLimit,
+		SigleIpRegisterLimitIn12hour:           appConfigM.SigleIpRegisterLimitIn12hour,
+		AutoClearHistoryMsg:                    appConfigM.AutoClearHistoryMsg,
+		SigninAuthCodeVisible:                  appConfigM.SigninAuthCodeVisible,
+		FriendOnlineStatusVisible:              appConfigM.FriendOnlineStatusVisible,
+		MobileMsgReadStatusVisible:             appConfigM.MobileMsgReadStatusVisible,
+		WalletPayoutMin:                        appConfigM.WalletPayoutMin,
+		TransferMinAmount:                      appConfigM.TransferMinAmount,
+		MobileEditMsg:                          appConfigM.MobileEditMsg,
+		GroupMemberSeeMember:                   appConfigM.GroupMemberSeeMember,
+		MsgTimeVisible:                         appConfigM.MsgTimeVisible,
+		PinnedConversationSync:                 appConfigM.PinnedConversationSync,
+		OnlyInternalFriendAdd:                  appConfigM.OnlyInternalFriendAdd,
+		OnlyInternalFriendCreateGroup:          appConfigM.OnlyInternalFriendCreateGroup,
+		OnlyInternalFriendSendGroupRedEnvelope: appConfigM.OnlyInternalFriendSendGroupRedEnvelope,
+		OnlyInternalFriendSendGroupCard:        appConfigM.OnlyInternalFriendSendGroupCard,
+		OnlyInternalFriendGroupRobotFreeMsg:    appConfigM.OnlyInternalFriendGroupRobotFreeMsg,
+		GroupMemberLimit:                       appConfigM.GroupMemberLimit,
+		UserAgreementContent:                   appConfigM.UserAgreementContent,
+		PrivacyPolicyContent:                   appConfigM.PrivacyPolicyContent,
 	}, nil
 }
 
@@ -140,4 +167,45 @@ type AppConfigResp struct {
 	InviteSystemAccountJoinGroupOn int    // 是否允许邀请系统账号进入群聊
 	RegisterUserMustCompleteInfoOn int    // 是否要求注册用户必须填写完整信息
 	ChannelPinnedMessageMaxCount   int    // 频道置顶消息最大数量
+	CanModifyApiUrl                int    // 是否可以修改API地址
+
+	ShortnoEditOff                 int    // 是否关闭短编号编辑
+	RevokeSecond                   int    // 消息可撤回时长
+
+	// 新增字段
+	IpWhiteList                            string // 后台IP白名单
+	LoginType                              int    // app登录类型
+	SensitiveWords                         string // 敏感词
+	DisableChangeDevice                    int    // 是否禁止更换设备
+	SignupDeviceLimit                      int    // 设备限制注册限制数
+	SigleIpRegisterLimitIn12hour           int    // 单IP12小时注册限制数
+	AutoClearHistoryMsg                    int    // 自动清除几天前历史消息
+	MiniProgramVisible                     int    // 小程序页是否可见
+	DiscoveryVisible                       int    // 发现页是否可见
+	ChargeAndPayoutVisible                 int    // 充值和提现是否可见
+	VoiceCallVisible                       int    // 语音通话是否可见
+	VideoCallVisible                       int    // 视频通话是否可见
+	SignupInviteCodeVisible                int    // 注册邀请码是否可见
+	SigninAuthCodeVisible                  int    // 登录授权码是否可见
+	FriendOnlineStatusVisible              int    // 好友在线状态是否可见
+	MobileMsgReadStatusVisible             int    // 手机消息已读状态是否可见
+	SignRedEnvelopeVisible                 int    // 签到红包模块是否开启
+	MineWalletVisible                      int    // 我的钱包是否开启
+	WalletPayoutMin                        int    // 钱包提现最小金额
+	RedEnvelopeVisible                     int    // 红包模块是否开启
+	TransferVisible                        int    // 转账模块是否开启
+	TransferMinAmount                      int    // 转账最小金额
+	MobileEditMsg                          int    // 手机端是否可以编辑消息
+	GroupMemberSeeMember                   int    // 普通群成员是否可以查看其他群成员
+	MsgTimeVisible                         int    // 消息时间是否可见
+	PinnedConversationSync                 int    // 置顶会话是否同步
+	OnlyInternalFriendAdd                  int    // 仅内部号可被加好友及加非内部号好友
+	OnlyInternalFriendCreateGroup          int    // 仅内部号可建群
+	OnlyInternalFriendSendGroupRedEnvelope int    // 仅内部号可发群红包
+	OnlyInternalFriendSendGroupCard        int    // 仅内部号可群内推送名片
+	OnlyInternalFriendGroupRobotFreeMsg    int    // 群机器人免消息
+	GroupMemberLimit                       int    // 群人数限制
+	UserAgreementContent                   string // 用户协议内容
+	PrivacyPolicyContent                   string // 隐私政策内容
+	MomentsVisible                         int    // 好友分享是否可见
 }

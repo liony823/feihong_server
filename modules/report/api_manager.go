@@ -39,7 +39,7 @@ func NewManager(ctx *config.Context) *Manager {
 // Route 配置路由规则
 func (m *Manager) Route(l *wkhttp.WKHttp) {
 
-	auth := l.Group("/v1/manager", l.AuthMiddleware(m.ctx.Cache(), m.ctx.GetConfig().Cache.TokenCachePrefix))
+	auth := l.Group("/v1/manager", m.ctx.BasicAuthMiddleware(l), l.AuthMiddleware(m.ctx.Cache(), m.ctx.GetConfig().Cache.TokenCachePrefix))
 	{
 		auth.GET("/report/list", m.reportList) // 举报列表
 	}

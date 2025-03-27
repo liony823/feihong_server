@@ -30,7 +30,7 @@ func NewManager(ctx *config.Context) *Manager {
 
 // Route 配置路由规则
 func (m *Manager) Route(r *wkhttp.WKHttp) {
-	auth := r.Group("/v1/manager", m.ctx.AuthMiddleware(r))
+	auth := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r))
 	{
 		auth.GET("/common/appconfig", m.appconfig)               // 获取app配置
 		auth.POST("/common/appconfig", m.updateConfig)           // 修改app配置
@@ -194,16 +194,40 @@ func (m *Manager) updateConfig(c *wkhttp.Context) {
 		return
 	}
 	type reqVO struct {
-		RevokeSecond                   int    `json:"revoke_second"`
-		WelcomeMessage                 string `json:"welcome_message"`
-		NewUserJoinSystemGroup         int    `json:"new_user_join_system_group"`
-		SearchByPhone                  int    `json:"search_by_phone"`
-		RegisterInviteOn               int    `json:"register_invite_on"`                  // 开启注册邀请机制
-		SendWelcomeMessageOn           int    `json:"send_welcome_message_on"`             // 开启注册登录发送欢迎语
-		InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
-		RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 注册用户必须填写完整信息
-		ChannelPinnedMessageMaxCount   int    `json:"channel_pinned_message_max_count"`    // 频道置顶消息最大数量
-		CanModifyApiUrl                int    `json:"can_modify_api_url"`                  // 是否可以修改api地址
+		RevokeSecond                           int    `json:"revoke_second"`
+		WelcomeMessage                         string `json:"welcome_message"`
+		NewUserJoinSystemGroup                 int    `json:"new_user_join_system_group"`
+		SearchByPhone                          int    `json:"search_by_phone"`
+		RegisterInviteOn                       int    `json:"register_invite_on"`                           // 开启注册邀请机制
+		SendWelcomeMessageOn                   int    `json:"send_welcome_message_on"`                      // 开启注册登录发送欢迎语
+		InviteSystemAccountJoinGroupOn         int    `json:"invite_system_account_join_group_on"`          // 开启系统账号加入群聊
+		RegisterUserMustCompleteInfoOn         int    `json:"register_user_must_complete_info_on"`          // 注册用户必须填写完整信息
+		ChannelPinnedMessageMaxCount           int    `json:"channel_pinned_message_max_count"`             // 频道置顶消息最大数量
+		CanModifyApiUrl                        int    `json:"can_modify_api_url"`                           // 是否可以修改api地址
+		IpWhiteList                            string `json:"ip_white_list"`                                // ip白名单
+		LoginType                              int    `json:"login_type"`                                   // app登录类型
+		SensitiveWords                         string `json:"sensitive_words"`                              // 敏感词
+		DisableChangeDevice                    int    `json:"disable_change_device"`                        // 是否禁止更换设备
+		SignupDeviceLimit                      int    `json:"signup_device_limit"`                          // 设备限制注册限制数
+		SigleIpRegisterLimitIn12hour           int    `json:"sigle_ip_register_limit_in_12hour"`            // 单IP12小时注册限制数
+		AutoClearHistoryMsg                    int    `json:"auto_clear_history_msg"`                       // 自动清除几天前历史消息
+		SigninAuthCodeVisible                  int    `json:"signin_auth_code_visible"`                     // 登录授权码是否可见
+		FriendOnlineStatusVisible              int    `json:"friend_online_status_visible"`                 // 好友在线状态是否可见
+		MobileMsgReadStatusVisible             int    `json:"mobile_msg_read_status_visible"`               // 手机消息已读状态是否可见
+		WalletPayoutMin                        int    `json:"wallet_payout_min"`                            // 钱包提现最小金额
+		TransferMinAmount                      int    `json:"transfer_min_amount"`                          // 转账最小金额
+		MobileEditMsg                          int    `json:"mobile_edit_msg"`                              // 手机端是否可以编辑消息
+		GroupMemberSeeMember                   int    `json:"group_member_see_member"`                      // 普通群成员是否可以查看其他群成员
+		MsgTimeVisible                         int    `json:"msg_time_visible"`                             // 消息时间是否可见
+		PinnedConversationSync                 int    `json:"pinned_conversation_sync"`                     // 置顶会话是否同步
+		OnlyInternalFriendAdd                  int    `json:"only_internal_friend_add"`                     // 仅内部号可被加好友及加非内部号好友
+		OnlyInternalFriendCreateGroup          int    `json:"only_internal_friend_create_group"`            // 仅内部号可建群
+		OnlyInternalFriendSendGroupRedEnvelope int    `json:"only_internal_friend_send_group_red_envelope"` // 仅内部号可发群红包
+		OnlyInternalFriendSendGroupCard        int    `json:"only_internal_friend_send_group_card"`         // 仅内部号可群内推送名片
+		OnlyInternalFriendGroupRobotFreeMsg    int    `json:"only_internal_friend_group_robot_free_msg"`    // 仅内部号群机器人免消息
+		GroupMemberLimit                       int    `json:"group_member_limit"`                           // 群人数限制
+		UserAgreementContent                   string `json:"user_agreement_content"`                       // 用户协议内容
+		PrivacyPolicyContent                   string `json:"privacy_policy_content"`                       // 隐私政策内容                      // 好友分享是否可见
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
@@ -227,6 +251,31 @@ func (m *Manager) updateConfig(c *wkhttp.Context) {
 	configMap["register_user_must_complete_info_on"] = req.RegisterUserMustCompleteInfoOn
 	configMap["channel_pinned_message_max_count"] = req.ChannelPinnedMessageMaxCount
 	configMap["can_modify_api_url"] = req.CanModifyApiUrl
+	configMap["ip_white_list"] = req.IpWhiteList
+	configMap["login_type"] = req.LoginType
+	configMap["sensitive_words"] = req.SensitiveWords
+	configMap["disable_change_device"] = req.DisableChangeDevice
+	configMap["signup_device_limit"] = req.SignupDeviceLimit
+	configMap["sigle_ip_register_limit_in_12hour"] = req.SigleIpRegisterLimitIn12hour
+	configMap["auto_clear_history_msg"] = req.AutoClearHistoryMsg
+	configMap["signin_auth_code_visible"] = req.SigninAuthCodeVisible
+	configMap["friend_online_status_visible"] = req.FriendOnlineStatusVisible
+	configMap["mobile_msg_read_status_visible"] = req.MobileMsgReadStatusVisible
+	configMap["wallet_payout_min"] = req.WalletPayoutMin
+	configMap["transfer_min_amount"] = req.TransferMinAmount
+	configMap["mobile_edit_msg"] = req.MobileEditMsg
+	configMap["group_member_see_member"] = req.GroupMemberSeeMember
+	configMap["msg_time_visible"] = req.MsgTimeVisible
+	configMap["pinned_conversation_sync"] = req.PinnedConversationSync
+	configMap["only_internal_friend_add"] = req.OnlyInternalFriendAdd
+	configMap["only_internal_friend_create_group"] = req.OnlyInternalFriendCreateGroup
+	configMap["only_internal_friend_send_group_red_envelope"] = req.OnlyInternalFriendSendGroupRedEnvelope
+	configMap["only_internal_friend_send_group_card"] = req.OnlyInternalFriendSendGroupCard
+	configMap["only_internal_friend_group_robot_free_msg"] = req.OnlyInternalFriendGroupRobotFreeMsg
+	configMap["group_member_limit"] = req.GroupMemberLimit
+	configMap["user_agreement_content"] = req.UserAgreementContent
+	configMap["privacy_policy_content"] = req.PrivacyPolicyContent
+
 	err = m.appconfigDB.updateWithMap(configMap, appConfigM.Id)
 	if err != nil {
 		m.Error("修改app配置信息错误", zap.Error(err))
@@ -257,6 +306,30 @@ func (m *Manager) appconfig(c *wkhttp.Context) {
 	var registerUserMustCompleteInfoOn = 0
 	var channelPinnedMessageMaxCount = 10
 	var canModifyApiUrl = 0
+	var ipWhiteList = ""
+	var loginType = 0
+	var sensitiveWords = ""
+	var disableChangeDevice = 0
+	var signupDeviceLimit = 0
+	var singleIpRegisterLimitIn12hour = 0
+	var autoClearHistoryMsg = 0
+	var signinAuthCodeVisible = 0
+	var friendOnlineStatusVisible = 0
+	var mobileMsgReadStatusVisible = 0
+	var walletPayoutMin = 0
+	var transferMinAmount = 0
+	var mobileEditMsg = 0
+	var groupMemberSeeMember = 0
+	var msgTimeVisible = 0
+	var pinnedConversationSync = 0
+	var onlyInternalFriendAdd = 0
+	var onlyInternalFriendCreateGroup = 0
+	var onlyInternalFriendSendGroupRedEnvelope = 0
+	var onlyInternalFriendSendGroupCard = 0
+	var onlyInternalFriendGroupRobotFreeMsg = 0
+	var groupMemberLimit = 0
+	var userAgreementContent = ""
+	var privacyPolicyContent = ""
 	if appconfig != nil {
 		revokeSecond = appconfig.RevokeSecond
 		welcomeMessage = appconfig.WelcomeMessage
@@ -268,6 +341,30 @@ func (m *Manager) appconfig(c *wkhttp.Context) {
 		registerUserMustCompleteInfoOn = appconfig.RegisterUserMustCompleteInfoOn
 		channelPinnedMessageMaxCount = appconfig.ChannelPinnedMessageMaxCount
 		canModifyApiUrl = appconfig.CanModifyApiUrl
+		ipWhiteList = appconfig.IpWhiteList
+		loginType = appconfig.LoginType
+		sensitiveWords = appconfig.SensitiveWords
+		disableChangeDevice = appconfig.DisableChangeDevice
+		signupDeviceLimit = appconfig.SignupDeviceLimit
+		singleIpRegisterLimitIn12hour = appconfig.SigleIpRegisterLimitIn12hour
+		autoClearHistoryMsg = appconfig.AutoClearHistoryMsg
+		signinAuthCodeVisible = appconfig.SigninAuthCodeVisible
+		friendOnlineStatusVisible = appconfig.FriendOnlineStatusVisible
+		mobileMsgReadStatusVisible = appconfig.MobileMsgReadStatusVisible
+		walletPayoutMin = appconfig.WalletPayoutMin
+		transferMinAmount = appconfig.TransferMinAmount
+		mobileEditMsg = appconfig.MobileEditMsg
+		groupMemberSeeMember = appconfig.GroupMemberSeeMember
+		msgTimeVisible = appconfig.MsgTimeVisible
+		pinnedConversationSync = appconfig.PinnedConversationSync
+		onlyInternalFriendAdd = appconfig.OnlyInternalFriendAdd
+		onlyInternalFriendCreateGroup = appconfig.OnlyInternalFriendCreateGroup
+		onlyInternalFriendSendGroupRedEnvelope = appconfig.OnlyInternalFriendSendGroupRedEnvelope
+		onlyInternalFriendSendGroupCard = appconfig.OnlyInternalFriendSendGroupCard
+		onlyInternalFriendGroupRobotFreeMsg = appconfig.OnlyInternalFriendGroupRobotFreeMsg
+		groupMemberLimit = appconfig.GroupMemberLimit
+		userAgreementContent = appconfig.UserAgreementContent
+		privacyPolicyContent = appconfig.PrivacyPolicyContent
 	}
 	if revokeSecond == 0 {
 		revokeSecond = 120
@@ -275,31 +372,42 @@ func (m *Manager) appconfig(c *wkhttp.Context) {
 	if welcomeMessage == "" {
 		welcomeMessage = m.ctx.GetConfig().WelcomeMessage
 	}
-	c.Response(&managerAppConfigResp{
-		RevokeSecond:                   revokeSecond,
-		WelcomeMessage:                 welcomeMessage,
-		NewUserJoinSystemGroup:         newUserJoinSystemGroup,
-		SearchByPhone:                  searchByPhone,
-		RegisterInviteOn:               registerInviteOn,
-		SendWelcomeMessageOn:           sendWelcomeMessageOn,
-		InviteSystemAccountJoinGroupOn: inviteSystemAccountJoinGroupOn,
-		RegisterUserMustCompleteInfoOn: registerUserMustCompleteInfoOn,
-		ChannelPinnedMessageMaxCount:   channelPinnedMessageMaxCount,
-		CanModifyApiUrl:                canModifyApiUrl,
+	c.Response(&AppConfigResp{
+		RevokeSecond:                           revokeSecond,
+		WelcomeMessage:                         welcomeMessage,
+		NewUserJoinSystemGroup:                 newUserJoinSystemGroup,
+		SearchByPhone:                          searchByPhone,
+		RegisterInviteOn:                       registerInviteOn,
+		SendWelcomeMessageOn:                   sendWelcomeMessageOn,
+		InviteSystemAccountJoinGroupOn:         inviteSystemAccountJoinGroupOn,
+		RegisterUserMustCompleteInfoOn:         registerUserMustCompleteInfoOn,
+		ChannelPinnedMessageMaxCount:           channelPinnedMessageMaxCount,
+		CanModifyApiUrl:                        canModifyApiUrl,
+		IpWhiteList:                            ipWhiteList,
+		LoginType:                              loginType,
+		SensitiveWords:                         sensitiveWords,
+		DisableChangeDevice:                    disableChangeDevice,
+		SignupDeviceLimit:                      signupDeviceLimit,
+		SigleIpRegisterLimitIn12hour:           singleIpRegisterLimitIn12hour,
+		AutoClearHistoryMsg:                    autoClearHistoryMsg,
+		SigninAuthCodeVisible:                  signinAuthCodeVisible,
+		FriendOnlineStatusVisible:              friendOnlineStatusVisible,
+		MobileMsgReadStatusVisible:             mobileMsgReadStatusVisible,
+		WalletPayoutMin:                        walletPayoutMin,
+		TransferMinAmount:                      transferMinAmount,
+		MobileEditMsg:                          mobileEditMsg,
+		GroupMemberSeeMember:                   groupMemberSeeMember,
+		MsgTimeVisible:                         msgTimeVisible,
+		PinnedConversationSync:                 pinnedConversationSync,
+		OnlyInternalFriendAdd:                  onlyInternalFriendAdd,
+		OnlyInternalFriendCreateGroup:          onlyInternalFriendCreateGroup,
+		OnlyInternalFriendSendGroupRedEnvelope: onlyInternalFriendSendGroupRedEnvelope,
+		OnlyInternalFriendSendGroupCard:        onlyInternalFriendSendGroupCard,
+		OnlyInternalFriendGroupRobotFreeMsg:    onlyInternalFriendGroupRobotFreeMsg,
+		GroupMemberLimit:                       groupMemberLimit,
+		UserAgreementContent:                   userAgreementContent,
+		PrivacyPolicyContent:                   privacyPolicyContent,
 	})
-}
-
-type managerAppConfigResp struct {
-	RevokeSecond                   int    `json:"revoke_second"`
-	WelcomeMessage                 string `json:"welcome_message"`
-	NewUserJoinSystemGroup         int    `json:"new_user_join_system_group"`
-	SearchByPhone                  int    `json:"search_by_phone"`
-	RegisterInviteOn               int    `json:"register_invite_on"`                  // 开启注册邀请机制
-	SendWelcomeMessageOn           int    `json:"send_welcome_message_on"`             // 开启注册登录发送欢迎语
-	InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
-	RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 注册用户必须填写完整信息
-	ChannelPinnedMessageMaxCount   int    `json:"channel_pinned_message_max_count"`    // 频道置顶消息最大数量
-	CanModifyApiUrl                int    `json:"can_modify_api_url"`                  // 是否可以修改api地址
 }
 
 type managerAppModule struct {

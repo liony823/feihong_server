@@ -8,18 +8,21 @@ import (
 
 type IService interface {
 	DeleteConversation(uid string, channelID string, channelType uint8) error
+	GetMsgCount() (int64, error)
 }
 
 type Service struct {
 	ctx *config.Context
 	log.Log
+	managerDB *managerDB
 }
 
 func NewService(ctx *config.Context) *Service {
 
 	return &Service{
-		ctx: ctx,
-		Log: log.NewTLog("message.Service"),
+		ctx:       ctx,
+		Log:       log.NewTLog("message.Service"),
+		managerDB: newManagerDB(ctx),
 	}
 }
 
@@ -46,4 +49,12 @@ func (s *Service) DeleteConversation(uid string, channelID string, channelType u
 	}
 
 	return nil
+}
+
+func (s *Service) GetMsgCount() (int64, error) {
+	count, err := s.managerDB.queryMsgCount()
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

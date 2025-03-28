@@ -25,7 +25,7 @@ import (
 type Common struct {
 	ctx *config.Context
 	log.Log
-	db          *db
+	db          *managerDB
 	appConfigDB *appConfigDB
 }
 
@@ -33,7 +33,7 @@ type Common struct {
 func New(ctx *config.Context) *Common {
 	return &Common{
 		ctx:         ctx,
-		db:          newDB(ctx.DB()),
+		db:          newManagerDB(ctx),
 		appConfigDB: newAppConfigDB(ctx),
 		Log:         log.NewTLog("common"),
 	}

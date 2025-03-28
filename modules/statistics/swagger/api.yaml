@@ -1,0 +1,142 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "statistics_manager"
+    description: "统计管理"
+schemes:
+  - "https"
+basePath: "/v1"
+paths:
+  /manager/statistics/countnum:
+    get:
+      tags:
+        - "statistics_manager"
+      summary: "统计数量"
+      description: "统计数量"
+      operationId: "manager countnum"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "date"
+          description: "日期"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "成功"
+          schema:
+            type: "object"
+            properties:
+              user_total_count:
+                type: "integer"
+              register_count:
+                type: "integer"
+              group_total_count:
+                type: "integer"
+              group_create_count:
+                type: "integer"
+              online_total_count:
+                type: "integer"
+              msg_total_count:
+                type: "integer"
+      "400":
+        description: "错误"
+        schema:
+          $ref: "#/definitions/response"   
+  /manager/statistics/registeruser/:start_date/:end_date:
+    get:
+      tags:
+        - "statistics_manager"
+      summary: "注册用户列表"
+      description: "注册用户列表"
+      operationId: "manager registeruser"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "start_date"
+          description: "开始日期"
+          required: true
+          type: "string"
+        - in: "path"
+          name: "end_date"
+          description: "结束日期"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "成功"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                date:
+                  type: "string"
+                count:
+                  type: "integer"
+      "400":
+        description: "错误"
+        schema:
+          $ref: "#/definitions/response"
+  /manager/statistics/createdgroup/:start_date/:end_date:
+    get:
+      description: New endpoint
+      responses:
+        200:
+          description: New response
+    get:
+      tags:
+        - "statistics_manager"
+      summary: "创建群列表"
+      description: "创建群列表"
+      operationId: "manager createdgroup"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "start_date"
+          description: "开始日期"
+          required: true
+          type: "string"
+        - in: "path"
+          name: "end_date"
+          description: "结束日期"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "成功"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                date:
+                  type: "string"
+                count:
+                  type: "integer"
+      "400":
+        description: "错误"
+        schema:
+          $ref: "#/definitions/response"
+definitions:
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

@@ -44,7 +44,9 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
-replace github.com/TangSengDaoDao/TangSengDaoDaoServerLib => github.com/liony823/feihong_server_lib v1.0.0-202503271742
+require github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
+
+replace github.com/TangSengDaoDao/TangSengDaoDaoServerLib => github.com/liony823/feihong_server_lib v1.0.0-202503272102
 
 require (
 	cloud.google.com/go v0.110.0 // indirect
@@ -121,6 +123,7 @@ require (
 	github.com/panjf2000/ants/v2 v2.10.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pquerna/otp v1.4.0
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect

@@ -13,6 +13,7 @@ schemes:
   - "https"
 basePath: "/v1"
 paths:
+ 
   /manager/login:
     post:
       tags:
@@ -59,7 +60,63 @@ paths:
         400:
           description: "错误"
           schema:
+            $ref: "#/definitions/response"        
+  /manager/user/current:
+    get:
+      tags:
+        - "userManager"
+      summary: "获取当前登录用户信息"
+      description: "获取当前登录用户信息"
+      operationId: "user current"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "用户uid"
+              name:
+                type: string
+                description: "用户名"
+              username:
+                type: string
+                description: "用户账号"
+              status:
+                type: integer
+                description: "用户状态"
+              phone:
+                type: string
+                description: "用户手机号"
+              short_no:
+                type: string
+                description: "用户短号"
+              sex:
+                type: integer
+                description: "用户性别"
+              wx_openid:
+                type: string
+                description: "微信openid"
+              gitee_uid:
+                type: string
+                description: "gitee uid"
+              github_uid:
+                type: string
+                description: "github uid"
+              is_destroy:
+                type: integer
+                description: "是否注销" 
+                
+        400:
+          description: "错误"
+          schema:
             $ref: "#/definitions/response"
+   
   /manager/user/add:
     post:
       tags:
@@ -459,6 +516,11 @@ paths:
         - "application/json"
       produces:
         - "application/json"
+      parameters:
+        - in: "query"
+          name: "keyword"
+          type: string
+          description: "搜索关键字"
       responses:
         200:
           description: "返回"

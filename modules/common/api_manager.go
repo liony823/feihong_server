@@ -2,6 +2,8 @@ package common
 
 import (
 	"errors"
+	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
@@ -14,7 +16,7 @@ import (
 type Manager struct {
 	ctx *config.Context
 	log.Log
-	db          *db
+	db          *managerDB
 	appconfigDB *appConfigDB
 }
 
@@ -23,7 +25,7 @@ func NewManager(ctx *config.Context) *Manager {
 	return &Manager{
 		ctx:         ctx,
 		Log:         log.NewTLog("commonManager"),
-		db:          newDB(ctx.DB()),
+		db:          newManagerDB(ctx),
 		appconfigDB: newAppConfigDB(ctx),
 	}
 }
@@ -38,7 +40,46 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 		auth.PUT("/common/appmodule", m.updateAppModule)         // 修改app模块
 		auth.POST("/common/appmodule", m.addAppModule)           // 新增app模块
 		auth.DELETE("/common/:sid/appmodule", m.deleteAppModule) // 删除app模块
+		auth.GET("/common/menu/current", m.getCurrentUserMenu)   // 获取当前用户菜单
+		auth.GET("/common/menu", m.getMenu)                      // 获取菜单
+		auth.POST("/common/menu", m.addMenu)                     // 新增菜单
+		auth.PUT("/common/menu/:key", m.updateMenu)              // 修改菜单
+		auth.DELETE("/common/menu/:key", m.deleteMenu)           // 删除菜单
+		auth.GET("/common/menu/user/:uid", m.getMenuUser)        // 获取菜单用户
+		auth.POST("/common/menu/user/:uid", m.assignMenu)        // 新增菜单用户
 	}
+
+	r.GET("/v1/manager/health", m.ctx.BasicAuthMiddleware(r), func(c *wkhttp.Context) {
+		var (
+			statusMap = map[string]string{
+				"status": "up",
+				"db":     "up",
+				"redis":  "up",
+			}
+			lastError error
+		)
+
+		err := m.db.session.Ping()
+		if err != nil {
+			m.Error("db ping error", zap.Error(err))
+			lastError = err
+			statusMap["db"] = "down"
+		}
+
+		_, err = m.ctx.GetRedisConn().Ping()
+		if err != nil {
+			m.Error("redis ping error", zap.Error(err))
+			lastError = err
+			statusMap["redis"] = "down"
+		}
+
+		if lastError != nil {
+			statusMap["status"] = "down"
+			statusMap["error"] = lastError.Error()
+		}
+
+		c.JSON(http.StatusOK, statusMap)
+	})
 }
 func (m *Manager) deleteAppModule(c *wkhttp.Context) {
 	err := c.CheckLoginRoleIsSuperAdmin()
@@ -408,6 +449,273 @@ func (m *Manager) appconfig(c *wkhttp.Context) {
 		UserAgreementContent:                   userAgreementContent,
 		PrivacyPolicyContent:                   privacyPolicyContent,
 	})
+}
+
+// 获取当前用户菜单
+func (m *Manager) getCurrentUserMenu(c *wkhttp.Context) {
+
+	var (
+		menus []*sysMenuModel
+	)
+	list := make([]*managerMenu, 0)
+
+	menus, err := m.db.querySysMenuList("")
+	if err != nil {
+		m.Error("查询菜单失败", zap.Error(err))
+		c.ResponseError(errors.New("查询菜单失败"))
+		return
+	}
+	err = c.CheckLoginRoleIsSuperAdmin()
+
+	if err != nil {
+		err := c.CheckLoginRole()
+		if err != nil {
+			c.ResponseError(err)
+			return
+		}
+
+		menuKeys, err := m.db.getSysMenuUserListByUID(c.GetLoginUID())
+		if err != nil {
+			m.Error("查询菜单失败", zap.Error(err))
+			c.ResponseError(errors.New("查询菜单失败"))
+			return
+		}
+
+		for _, menu := range menus {
+			if slices.Contains(menuKeys, menu.Key) {
+				list = append(list, m.sysMenuModelToManagerMenu(menu))
+			}
+		}
+	}
+
+	for _, menu := range menus {
+		list = append(list, m.sysMenuModelToManagerMenu(menu))
+	}
+	c.Response(list)
+}
+
+// 获取菜单列表
+func (m *Manager) getMenu(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	menus, err := m.db.querySysMenuList(c.Query("keyword"))
+	if err != nil {
+		m.Error("查询菜单列表失败", zap.Error(err))
+		c.ResponseError(errors.New("查询菜单列表失败"))
+		return
+	}
+	list := make([]*managerMenu, 0)
+	if len(menus) > 0 {
+		for _, menu := range menus {
+			list = append(list, m.sysMenuModelToManagerMenu(menu))
+		}
+	}
+	c.Response(list)
+}
+
+// 将sysMenuModel转成managerMenu
+func (m *Manager) sysMenuModelToManagerMenu(menu *sysMenuModel) *managerMenu {
+	return &managerMenu{
+		Key:          menu.Key,
+		Path:         menu.Path,
+		Name:         menu.Name,
+		Desc:         menu.Desc,
+		Status:       menu.Status,
+		Icon:         menu.Icon,
+		Sort:         menu.Sort,
+		ParentKey:    menu.ParentKey,
+		Layout:       menu.Layout,
+		HiddenInMenu: menu.HiddenInMenu,
+		Redirect:     menu.Redirect,
+		Component:    menu.Component,
+		CreatedAt:    menu.CreatedAt.String(),
+		UpdatedAt:    menu.UpdatedAt.String(),
+	}
+}
+
+// 新增菜单
+func (m *Manager) addMenu(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	type managerMenuReqVO struct {
+		Key          string `json:"key"`
+		Path         string `json:"path"`
+		Name         string `json:"name"`
+		Desc         string `json:"desc"`
+		Status       int    `json:"status"`
+		Icon         string `json:"icon"`
+		Sort         int    `json:"sort"`
+		ParentKey    string `json:"parent_key"`
+		Layout       bool   `json:"layout"`
+		HiddenInMenu bool   `json:"hidden_in_menu"`
+		Redirect     string `json:"redirect"`
+		Component    string `json:"component"`
+	}
+	var req managerMenuReqVO
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+	id, err := m.db.insertSysMenu(&sysMenuModel{
+		Key:    req.Key,
+		Path:   req.Path,
+		Name:   req.Name,
+		Desc:   req.Desc,
+		Status: req.Status,
+	})
+	if err != nil {
+		m.Error("新增菜单失败", zap.Error(err))
+		c.ResponseError(errors.New("新增菜单失败"))
+		return
+	}
+	c.Response(map[string]interface{}{
+		"id": id,
+	})
+}
+
+// 修改菜单
+func (m *Manager) updateMenu(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	type managerMenuReqVO struct {
+		Key          string `json:"key"`
+		Path         string `json:"path"`
+		Name         string `json:"name"`
+		Desc         string `json:"desc"`
+		Status       int    `json:"status"`
+		Icon         string `json:"icon"`
+		Sort         int    `json:"sort"`
+		ParentKey    string `json:"parent_key"`
+		Layout       bool   `json:"layout"`
+		HiddenInMenu bool   `json:"hidden_in_menu"`
+		Redirect     string `json:"redirect"`
+		Component    string `json:"component"`
+	}
+	var req managerMenuReqVO
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+
+	err = m.db.updateSysMenu(&sysMenuModel{
+		Key:          req.Key,
+		Path:         req.Path,
+		Name:         req.Name,
+		Desc:         req.Desc,
+		Status:       req.Status,
+		Icon:         req.Icon,
+		Sort:         req.Sort,
+		ParentKey:    req.ParentKey,
+		Layout:       req.Layout,
+		HiddenInMenu: req.HiddenInMenu,
+		Redirect:     req.Redirect,
+		Component:    req.Component,
+	})
+	if err != nil {
+		m.Error("修改菜单失败", zap.Error(err))
+		c.ResponseError(errors.New("修改菜单失败"))
+		return
+	}
+	c.ResponseOK()
+}
+
+// 删除菜单
+func (m *Manager) deleteMenu(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	err = m.db.deleteSysMenu(c.Param("key"))
+	if err != nil {
+		m.Error("删除菜单失败", zap.Error(err))
+		c.ResponseError(errors.New("删除菜单失败"))
+		return
+	}
+	c.ResponseOK()
+}
+
+// 获取菜单用户
+func (m *Manager) getMenuUser(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	uid := c.Param("uid")
+	menus, err := m.db.getSysMenuUserListByUID(uid)
+	if err != nil {
+		m.Error("查询菜单用户失败", zap.Error(err))
+		c.ResponseError(errors.New("查询菜单用户失败"))
+		return
+	}
+	c.Response(menus)
+}
+
+// 分配菜单用户
+func (m *Manager) assignMenu(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	uid := c.Param("uid")
+	type managerMenuUserReqVO struct {
+		Menus []string `json:"menus"`
+	}
+	var req managerMenuUserReqVO
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+	_, err = m.db.getSysMenuUserListByUID(uid)
+	if err != nil {
+		_, err = m.db.insertSysMenuUser(&sysMenuUserModel{
+			UID:   uid,
+			Menus: strings.Join(req.Menus, ","),
+		})
+		if err != nil {
+			m.Error("新增菜单用户失败", zap.Error(err))
+			c.ResponseError(errors.New("新增菜单用户失败"))
+			return
+		}
+		c.ResponseOK()
+		return
+	}
+
+	err = m.db.assignMenu(uid, req.Menus)
+	if err != nil {
+		m.Error("分配菜单失败", zap.Error(err))
+		c.ResponseError(errors.New("分配菜单失败"))
+		return
+	}
+	c.ResponseOK()
+}
+
+type managerMenu struct {
+	Key          string `json:"key"`
+	Path         string `json:"path"`
+	Name         string `json:"name"`
+	Desc         string `json:"desc"`
+	Status       int    `json:"status"`
+	Icon         string `json:"icon"`
+	Sort         int    `json:"sort"`
+	ParentKey    string `json:"parent_key"`
+	Layout       bool   `json:"layout"`
+	HiddenInMenu bool   `json:"hidden_in_menu"`
+	Redirect     string `json:"redirect"`
+	Component    string `json:"component"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
 }
 
 type managerAppModule struct {

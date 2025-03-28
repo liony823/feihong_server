@@ -14,7 +14,7 @@ import (
 
 func TestCountNum(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
-	u := NewStatistics(ctx)
+	u := NewManager(ctx)
 	u.Route(s.GetRoute())
 	err := u.userService.AddUser(&user.AddUserReq{
 		Name: "ss",
@@ -28,7 +28,7 @@ func TestCountNum(t *testing.T) {
 	assert.NoError(t, err)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/v1/statistics/countnum?date=2021-03-02", nil)
+	req, _ := http.NewRequest("GET", "/v1/manager/statistics/countnum?date=2021-03-02", nil)
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"user_total_count":1`))
@@ -37,7 +37,7 @@ func TestCountNum(t *testing.T) {
 
 func TestRegisterUserListWithDateSpace(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
-	u := NewStatistics(ctx)
+	u := NewManager(ctx)
 	u.Route(s.GetRoute())
 	err := u.userService.AddUser(&user.AddUserReq{
 		Name: "ss",
@@ -53,7 +53,7 @@ func TestRegisterUserListWithDateSpace(t *testing.T) {
 
 func TestGroupWithDateSpace(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
-	u := NewStatistics(ctx)
+	u := NewManager(ctx)
 	u.Route(s.GetRoute())
 	err := u.groupService.AddGroup(&group.AddGroupReq{
 		GroupNo: "xxx",

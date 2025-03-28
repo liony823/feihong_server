@@ -99,9 +99,9 @@ func (m *managerDB) queryUserWithNameAndRole(username string, role string) (*man
 	return user, err
 }
 
-func (m *managerDB) queryUsersWithRole(role string) ([]*managerUserModel, error) {
+func (m *managerDB) queryUsersWithRole(role string, keyword string) ([]*managerUserModel, error) {
 	var list []*managerUserModel
-	_, err := m.session.Select("*").From("user").Where("role=?", role).Load(&list)
+	_, err := m.session.Select("*").From("user").Where("role=? and (name like ? or uid like ? or username like ?)", role, "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%").Load(&list)
 	return list, err
 }
 func (m *managerDB) deleteUserWithUIDAndRole(uid, role string) error {
@@ -109,12 +109,26 @@ func (m *managerDB) deleteUserWithUIDAndRole(uid, role string) error {
 	return err
 }
 
+// 通过uid查询用户信息
+func (m *managerDB) queryUserWithUID(uid string) (*managerUserModel, error) {
+	var user *managerUserModel
+	_, err := m.session.Select("*").From("user").Where("uid=?", uid).Load(&user)
+	return user, err
+}
+
+const (
+	TwoVerifyOnOff = 0
+	TwoVerifyOnOn  = 1
+)
+
 type managerLoginModel struct {
-	Username string
-	UID      string
-	Name     string
-	Password string
-	Role     string
+	Username        string
+	UID             string
+	Name            string
+	Password        string
+	Role            string
+	TwoVerifyOn     int
+	TwoVerifySecret string
 }
 
 type managerUserModel struct {

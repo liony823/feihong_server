@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pquerna/otp/totp"
+
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
 	common2 "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
@@ -58,6 +60,7 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 	}
 	auth := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r))
 	{
+		auth.GET("/user/current", m.getCurrentUser)           // 获取当前登录用户信息
 		auth.POST("/user/admin", m.addAdminUser)              // 添加一个管理员
 		auth.GET("/user/admin", m.getAdminUsers)              // 查询管理员用户
 		auth.DELETE("/user/admin", m.deleteAdminUsers)        // 删除管理员用户
@@ -168,6 +171,17 @@ func (m *Manager) login(c *wkhttp.Context) {
 	if userInfo.Role != string(wkhttp.Admin) && userInfo.Role != string(wkhttp.SuperAdmin) {
 		c.ResponseError(errors.New("登录账号未开通管理权限"))
 		return
+	}
+	if userInfo.TwoVerifyOn == TwoVerifyOnOn {
+		if req.Code == "" {
+			c.ResponseError(errors.New("请输入两步验证码"))
+			return
+		}
+
+		if !totp.Validate(req.Code, userInfo.TwoVerifySecret) {
+			c.ResponseError(errors.New("两步验证失败"))
+			return
+		}
 	}
 	token := util.GenerUUID()
 	// 将token设置到缓存
@@ -303,7 +317,8 @@ func (m *Manager) getAdminUsers(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
-	users, err := m.db.queryUsersWithRole(string(wkhttp.Admin))
+	keyword := c.Query("keyword")
+	users, err := m.db.queryUsersWithRole(string(wkhttp.Admin), keyword)
 	if err != nil {
 		m.Error("查询管理员用户错误", zap.Error(err))
 		c.ResponseError(errors.New("查询管理员用户错误"))
@@ -321,6 +336,41 @@ func (m *Manager) getAdminUsers(c *wkhttp.Context) {
 		}
 	}
 	c.Response(list)
+}
+
+// 获取当前登录用户信息
+func (m *Manager) getCurrentUser(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+
+	loginUID := c.GetLoginUID()
+	if loginUID == "" {
+		c.ResponseError(errors.New("登录用户uid不能为空"))
+		return
+	}
+	user, err := m.db.queryUserWithUID(loginUID)
+	if err != nil {
+		m.Error("查询当前登录用户信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询当前登录用户信息错误"))
+		return
+	}
+	c.Response(&managerUserResp{
+		UID:          user.UID,
+		Name:         user.Name,
+		Username:     user.Username,
+		RegisterTime: user.CreatedAt.String(),
+		Phone:        user.Phone,
+		ShortNo:      user.ShortNo,
+		Sex:          user.Sex,
+		Status:       user.Status,
+		IsDestroy:    user.IsDestroy,
+		WXOpenid:     user.WXOpenid,
+		GiteeUID:     user.GiteeUID,
+		GithubUID:    user.GithubUID,
+	})
 }
 
 // 添加一个管理员
@@ -1097,6 +1147,7 @@ func getShowPhoneNum(mobile string) string {
 type managerLoginReq struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Code     string `json:"code"`
 }
 
 type managerLoginResp struct {

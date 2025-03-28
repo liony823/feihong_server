@@ -14,6 +14,213 @@ schemes:
 basePath: "/v1"
 
 paths:
+  /manager/health:
+    get:
+      tags:
+        - "commonManager"
+      summary: "健康检查"
+      description: "健康检查"
+      operationId: "manager health"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        $ref: "#/definitions/response"
+  /manager/common/menu/current:
+    get:
+      tags:
+        - "commonManager"
+      summary: "获取当前用户菜单"
+      description: "获取当前用户菜单"
+      operationId: "manager common menu current"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/managerMenu"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/common/menu:
+    get:
+      tags:
+        - "commonManager"
+      summary: "获取菜单"
+      description: "获取菜单"
+      operationId: "manager common menu"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/managerMenu"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post:
+      tags:
+        - "commonManager"
+      summary: "新增菜单"
+      description: "新增菜单"
+      operationId: "manager common menu add"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "新增菜单信息"
+          required: true
+          schema:
+            $ref: "#/definitions/managerMenu"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: "菜单ID"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    put:
+      tags:
+          - "commonManager"
+      summary: "修改菜单"
+      description: "修改菜单"
+      operationId: "manager common menu update"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "修改菜单信息"
+          required: true
+          schema:
+            $ref: "#/definitions/managerMenu"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+        tags:
+          - "commonManager"
+        summary: "删除菜单"
+        description: "删除菜单"
+        operationId: "manager common menu delete"
+        parameters:
+          - in: "path"
+            name: "key"
+            description: "菜单key"
+            required: true
+            type: string
+        responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: "#/definitions/response"
+          400:
+            description: "错误"
+            schema:
+              $ref: "#/definitions/response"
+  /manager/common/menu/user/:uid:
+    get:
+      tags:
+        - "commonManager"
+      summary: "获取菜单"
+      description: "获取菜单"
+      operationId: "manager common menu get"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              type: string
+              description: "菜单key"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+    post:
+      tags:
+        - "commonManager"
+      summary: "分配菜单"
+      description: "分配菜单"
+      operationId: "manager common menu assign"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "uid"
+          description: "用户ID"
+          required: true
+          type: integer
+        - in: "body"
+          name: "req"
+          description: "分配菜单信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              menus:
+                type: array
+                items:
+                  type: string
+                  description: "菜单key"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /manager/common/appconfig:
     get:
       tags:
@@ -64,8 +271,8 @@ paths:
                 type: string
                 description: "ip白名单"
               login_type:
-                type: string
-                description: "登录类型"
+                type: integer
+                description: "登录类型: 1:手机号 2:账户名 3:手机号+账户名 "
               sensitive_words:
                 type: string
                 description: "敏感词"
@@ -208,8 +415,8 @@ paths:
                 type: string
                 description: "ip白名单"
               login_type:
-                type: string
-                description: "登录类型"
+                type: integer
+                description: "登录类型: 1:手机号 2:账户名 3:手机号+账户名 "
               sensitive_words:
                 type: string
                 description: "敏感词"
@@ -436,6 +643,19 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /health:
+    get:
+      tags:
+        - "common"
+      summary: "健康检查"
+      description: "健康检查"
+      operationId: "health"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        $ref: "#/definitions/response"
   /common/appversion:
     post:
       tags:
@@ -769,3 +989,48 @@ definitions:
         format: int
       msg:
         type: "string"
+  managerMenu:
+    type: "object"
+    properties:
+      key:
+        type: "string"
+        description: "菜单key"
+      path:
+        type: "string"
+        description: "菜单路径"
+      name:
+        type: "string"
+        description: "菜单名称"
+      desc:
+        type: "string"
+        description: "菜单描述"
+      status:
+        type: "integer"
+        description: "菜单状态"
+      icon:
+        type: "string"
+        description: "菜单图标"
+      sort:
+        type: "integer"
+        description: "菜单排序"
+      parent_key:
+        type: "string"
+        description: "父菜单key"
+      layout:
+        type: "boolean"
+        description: "是否是布局"
+      hidden_in_menu:
+        type: "boolean"
+        description: "是否在菜单中隐藏"
+      redirect:
+        type: "string"
+        description: "重定向路径"
+      component:
+        type: "string"
+        description: "组件路径"
+      created_at:
+        type: "string"
+        description: "创建时间"
+      updated_at:
+        type: "string"
+        description: "更新时间"

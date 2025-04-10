@@ -643,6 +643,86 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /manager/common/fs_config:
+    get:
+      tags:
+        - "commonManager"
+      summary: "获取文件上传配置"
+      description: "获取文件上传配置"
+      operationId: "manager common fs config"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: 
+            items:
+              properties:
+                id:
+                  type: integer
+                  description: "ID"
+                key:
+                  type: string
+                  description: "key"
+                title:
+                  type: string
+                  description: "标题"
+                options:
+                  type: string
+                  description: "选项"
+                created_at:
+                  type: string
+                  description: "创建时间"
+                updated_at:
+                  type: string
+                  description: "更新时间"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post:
+      tags:
+        - "commonManager"
+      summary: "添加文件上传配置"
+      description: "添加文件上传配置"
+      operationId: "manager common fs config add"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "添加文件上传配置"
+          required: true
+          schema:
+            type: object
+            properties:
+              key:
+                type: string
+                description: "key"
+              title:
+                type: string
+                description: "标题"
+              options:
+                type: string
+                description: "选项"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /health:
     get:
       tags:

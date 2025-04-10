@@ -17,6 +17,7 @@ type Manager struct {
 	ctx *config.Context
 	log.Log
 	db          *managerDB
+	fsConfigDB  *fsConfigDB
 	appconfigDB *appConfigDB
 }
 
@@ -26,13 +27,14 @@ func NewManager(ctx *config.Context) *Manager {
 		ctx:         ctx,
 		Log:         log.NewTLog("commonManager"),
 		db:          newManagerDB(ctx),
+		fsConfigDB:  newFsConfigDB(ctx),
 		appconfigDB: newAppConfigDB(ctx),
 	}
 }
 
 // Route 配置路由规则
 func (m *Manager) Route(r *wkhttp.WKHttp) {
-	auth := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r))
+	auth := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r), m.ctx.AdminOperateRecordMiddleware(r))
 	{
 		auth.GET("/common/appconfig", m.appconfig)               // 获取app配置
 		auth.POST("/common/appconfig", m.updateConfig)           // 修改app配置
@@ -47,6 +49,8 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 		auth.DELETE("/common/menu/:key", m.deleteMenu)           // 删除菜单
 		auth.GET("/common/menu/user/:uid", m.getMenuUser)        // 获取菜单用户
 		auth.POST("/common/menu/user/:uid", m.assignMenu)        // 新增菜单用户
+		auth.GET("/common/fs_config", m.getFsConfigList)         // 获取文件上传配置
+		auth.PUT("/common/fs_config", m.updateFSConfig)          // 修改文件上传配置
 	}
 
 	r.GET("/v1/manager/health", m.ctx.BasicAuthMiddleware(r), func(c *wkhttp.Context) {
@@ -701,6 +705,67 @@ func (m *Manager) assignMenu(c *wkhttp.Context) {
 	c.ResponseOK()
 }
 
+// 获取文件上传配置列表
+func (m *Manager) getFsConfigList(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	models, err := m.fsConfigDB.queryFSConfigList()
+	if err != nil {
+		m.Error("查询文件上传配置列表失败", zap.Error(err))
+		c.ResponseError(errors.New("查询文件上传配置列表失败"))
+		return
+	}
+
+	list := make([]*fsConfig, 0)
+	if len(models) > 0 {
+		for _, model := range models {
+			list = append(list, &fsConfig{
+				Id:        model.Id,
+				Key:       model.Key,
+				Title:     model.Title,
+				Options:   model.Options,
+				CreatedAt: model.CreatedAt.String(),
+				UpdatedAt: model.UpdatedAt.String(),
+			})
+		}
+	}
+
+	c.Response(list)
+}
+
+// 根据key修改文件上传配置
+func (m *Manager) updateFSConfig(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	type fsConfigReqVO struct {
+		Key    string `json:"key"`
+		Title  string `json:"title"`
+		Option string `json:"option"`
+	}
+	var req fsConfigReqVO
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+	err = m.fsConfigDB.updateFSConfigWithKey(&fsConfigModel{
+		Key:     req.Key,
+		Title:   req.Title,
+		Options: req.Option,
+	})
+	if err != nil {
+		m.Error("修改文件上传配置失败", zap.Error(err))
+		c.ResponseError(errors.New("修改文件上传配置失败"))
+		return
+	}
+	c.ResponseOK()
+}
+
 type managerMenu struct {
 	Key          string `json:"key"`
 	Path         string `json:"path"`
@@ -723,4 +788,13 @@ type managerAppModule struct {
 	Name   string `json:"name"`
 	Desc   string `json:"desc"`
 	Status int    `json:"status"` // 模块状态 1.可选 0.不可选 2.选中不可编辑
+}
+
+type fsConfig struct {
+	Id        int64  `json:"id"`
+	Key       string `json:"key"`
+	Title     string `json:"title"`
+	Options   string `json:"options"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }

@@ -1,7 +1,9 @@
 package user
 
 import (
+	"encoding/base32"
 	"fmt"
+	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
@@ -58,7 +60,7 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 	{
 		user.POST("/login", m.login) // 账号登录
 	}
-	auth := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r))
+	auth := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r), m.ctx.AdminOperateRecordMiddleware(r))
 	{
 		auth.GET("/user/current", m.getCurrentUser)           // 获取当前登录用户信息
 		auth.POST("/user/admin", m.addAdminUser)              // 添加一个管理员
@@ -74,7 +76,81 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 		auth.PUT("/user/liftban/:uid/:status", m.liftBanUser) // 解禁或封禁用户
 		auth.POST("/user/updatepassword", m.updatePwd)        // 修改用户密码
 		auth.GET("/user/devices", m.devices)                  // 查看某用户设备列表
+		auth.GET("/user/enable_2FA", m.enable2FA)             // 开启两步验证
+		auth.POST("/user/disable_2FA", m.disable2FA)          // 关闭两步验证
+		auth.GET("/user/bind_2FA", m.bind2FA)                 // 绑定两步验证秘钥
 	}
+}
+
+// 开启两步验证秘钥
+func (m *Manager) enable2FA(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+
+	userInfo, err := m.db.queryUserWithUID(c.GetLoginUID())
+	if err != nil {
+		m.Error("查询用户信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户信息错误"))
+		return
+	}
+
+	var (
+		secret  string
+		codeURL string
+	)
+
+	if userInfo.TwoFAOn == TwoFAOnOn {
+		secret = userInfo.TwoFASecret
+		codeURL = generateGoogleAuthQRCode(userInfo.Name, userInfo.TwoFASecret)
+
+	} else {
+		secret, err := generateGoogleAuthSecret()
+		if err != nil {
+			m.Error("生成两步验证秘钥错误", zap.Error(err))
+			c.ResponseError(errors.New("生成两步验证秘钥错误"))
+			return
+		}
+
+		err = m.db.updateUserWithUID(c.GetLoginUID(), map[string]interface{}{
+			"two_fa_on":     TwoFAOnOff,
+			"two_fa_secret": secret,
+		})
+		if err != nil {
+			m.Error("更新用户信息错误", zap.Error(err))
+			c.ResponseError(errors.New("更新用户信息错误"))
+			return
+		}
+
+		codeURL = generateGoogleAuthQRCode(userInfo.Name, secret)
+	}
+
+	c.Response(&managerGetTwoVerifySecretResp{
+		Secret:  secret,
+		CodeURL: codeURL,
+	})
+}
+
+// 关闭两步验证
+func (m *Manager) disable2FA(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+
+	err = m.db.updateUserWithUID(c.GetLoginUID(), map[string]interface{}{
+		"two_fa_on":     TwoFAOnOff,
+		"two_fa_secret": "",
+	})
+	if err != nil {
+		m.Error("关闭两步验证错误", zap.Error(err))
+		c.ResponseError(errors.New("关闭两步验证错误"))
+		return
+	}
+	c.ResponseOK()
 }
 
 func (m *Manager) devices(c *wkhttp.Context) {
@@ -109,6 +185,41 @@ func (m *Manager) devices(c *wkhttp.Context) {
 		})
 	}
 	c.Response(list)
+}
+
+// 绑定两步验证秘钥
+func (m *Manager) bind2FA(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	code := c.Query("code")
+	if code == "" {
+		c.ResponseError(errors.New("验证码不能为空"))
+		return
+	}
+	userInfo, err := m.db.queryUserWithUID(c.GetLoginUID())
+	if err != nil {
+		m.Error("查询用户信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户信息错误"))
+		return
+	}
+
+	if !totp.Validate(code, userInfo.TwoFASecret) {
+		c.ResponseError(errors.New("验证码错误"))
+		return
+	}
+
+	err = m.db.updateUserWithUID(c.GetLoginUID(), map[string]interface{}{
+		"two_fa_on": TwoFAOnOn,
+	})
+	if err != nil {
+		m.Error("绑定两步验证错误", zap.Error(err))
+		c.ResponseError(errors.New("绑定两步验证错误"))
+		return
+	}
+	c.ResponseOK()
 }
 
 func (m *Manager) online(c *wkhttp.Context) {
@@ -172,13 +283,13 @@ func (m *Manager) login(c *wkhttp.Context) {
 		c.ResponseError(errors.New("登录账号未开通管理权限"))
 		return
 	}
-	if userInfo.TwoVerifyOn == TwoVerifyOnOn {
+	if userInfo.TwoFAOn == TwoFAOnOn {
 		if req.Code == "" {
 			c.ResponseError(errors.New("请输入两步验证码"))
 			return
 		}
 
-		if !totp.Validate(req.Code, userInfo.TwoVerifySecret) {
+		if !totp.Validate(req.Code, userInfo.TwoFASecret) {
 			c.ResponseError(errors.New("两步验证失败"))
 			return
 		}
@@ -1228,6 +1339,11 @@ type userOnlineResp struct {
 	Online      int    `json:"online"`
 }
 
+type managerGetTwoVerifySecretResp struct {
+	Secret  string `json:"secret"`
+	CodeURL string `json:"code_url"`
+}
+
 func newUserOnlineResp(m *onlineStatusWeightModel) *userOnlineResp {
 
 	return &userOnlineResp{
@@ -1237,4 +1353,20 @@ func newUserOnlineResp(m *onlineStatusWeightModel) *userOnlineResp {
 		LastOffline: m.LastOffline,
 		Online:      m.Online,
 	}
+}
+
+func generateGoogleAuthQRCode(nickName, secret string) string {
+	return fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=https://43.154.73.22:58602",
+		"飞宏IM", // 改为你的应用名称
+		nickName,
+		secret)
+}
+
+func generateGoogleAuthSecret() (string, error) {
+	secret := make([]byte, 10)
+	_, err := rand.Read(secret)
+	if err != nil {
+		return "", err
+	}
+	return base32.StdEncoding.EncodeToString(secret), nil
 }

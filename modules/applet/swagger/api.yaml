@@ -1,0 +1,247 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "common"
+    description: "通用"
+  - name: "commonManager"
+    description: "通用后台管理"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /manager/applet:
+    get:
+      tags:
+        - "commonManager"
+      summary: "获取小程序列表"
+      description: "获取小程序列表"
+      operationId: "manager applet list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/managerAppletModel"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post:
+      tags:
+        - "commonManager"
+      summary: "添加小程序"
+      description: "添加小程序"
+      operationId: "manager applet add"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "添加小程序"
+          required: true
+          schema:
+            type: object
+            properties:
+              display_name:
+                type: string
+                description: "小程序名称"
+              key:
+                type: string
+                description: "小程序key"
+              icon:
+                type: string
+                description: "小程序icon"
+              link:
+                type: string
+                description: "小程序link"
+              priority:
+                type: integer
+                description: "小程序优先级"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    put:
+      tags:
+        - "commonManager"
+      summary: "更新小程序"
+      description: "更新小程序"
+      operationId: "manager applet update"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "更新小程序"
+          required: true
+          schema:
+            type: object
+            properties:
+              display_name:
+                type: string
+                description: "小程序名称"
+              key:
+                type: string
+                description: "小程序key"
+              icon:
+                type: string
+                description: "小程序icon"
+              link:
+                type: string
+                description: "小程序link"
+              priority:
+                type: integer
+                description: "小程序优先级"
+              status:
+                type: integer
+                description: "小程序状态"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/applet/:key:
+    delete:
+      tags:
+        - "commonManager"
+      summary: "删除小程序"
+      description: "删除小程序"
+      operationId: "manager applet delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "key"
+          description: "小程序key"
+          required: true
+          type: string
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /manager/applet/default:
+    put:
+      tags:
+        - "commonManager"
+      summary: "设置默认小程序"
+      description: "设置默认小程序"
+      operationId: "manager applet default"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "设置默认小程序"
+          required: true
+          schema:
+            type: object
+            properties:
+              key:
+                type: string
+                description: "小程序key"
+              is_default:
+                type: integer
+                description: "是否是默认小程序"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"
+  managerAppletModel:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: "ID"
+      display_name:
+        type: string
+        description: "小程序名称"
+      key:
+        type: string
+        description: "小程序key"
+      icon:
+        type: string
+        description: "小程序icon"
+      link:
+        type: string
+        description: "小程序link"
+      priority:
+        type: integer
+        description: "小程序优先级"
+      status:
+        type: integer
+        description: "小程序状态"
+      is_default:
+        type: integer
+        description: "是否是默认小程序"
+      created_at:
+        type: string
+        description: "创建时间"
+      updated_at:
+        type: string
+        description: "更新时间"
+

@@ -116,33 +116,41 @@ func (m *managerDB) queryUserWithUID(uid string) (*managerUserModel, error) {
 	return user, err
 }
 
+// 通过uid更新用户信息
+func (m *managerDB) updateUserWithUID(uid string, userInfo map[string]interface{}) error {
+	_, err := m.session.Update("user").SetMap(userInfo).Where("uid=?", uid).Exec()
+	return err
+}
+
 const (
-	TwoVerifyOnOff = 0
-	TwoVerifyOnOn  = 1
+	TwoFAOnOff = 0
+	TwoFAOnOn  = 1
 )
 
 type managerLoginModel struct {
-	Username        string
-	UID             string
-	Name            string
-	Password        string
-	Role            string
-	TwoVerifyOn     int
-	TwoVerifySecret string
+	Username    string
+	UID         string
+	Name        string
+	Password    string
+	Role        string
+	TwoFAOn     int
+	TwoFASecret string
 }
 
 type managerUserModel struct {
-	Username  string
-	Name      string
-	UID       string
-	Status    int
-	Phone     string
-	ShortNo   string
-	WXOpenid  string // 微信openid
-	GiteeUID  string // gitee uid
-	GithubUID string // github uid
-	Sex       int
-	IsDestroy int
+	Username    string
+	Name        string
+	UID         string
+	Status      int
+	Phone       string
+	ShortNo     string
+	WXOpenid    string // 微信openid
+	GiteeUID    string // gitee uid
+	GithubUID   string // github uid
+	Sex         int
+	IsDestroy   int
+	TwoFAOn     int
+	TwoFASecret string
 	db.BaseModel
 }
 

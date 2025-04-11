@@ -35,6 +35,8 @@ create table `user`
   `version`    bigint     not null DEFAULT 0,                                -- 数据版本 
   status smallint       not null DEFAULT 1,                                -- 用户状态 0.禁用 1.可用
   bench_no        VARCHAR(40)     not null default '',                     -- 性能测试批次号，性能测试幂等用
+  `2fa_on`   smallint      not null DEFAULT 0,                             -- 是否开启2FA 0.否 1.是
+  `2fa_secret` VARCHAR(40)  not null default '',                             -- 2FA密钥
   created_at timeStamp     not null DEFAULT CURRENT_TIMESTAMP, -- 创建时间
   updated_at timeStamp     not null DEFAULT CURRENT_TIMESTAMP  -- 更新时间
 );

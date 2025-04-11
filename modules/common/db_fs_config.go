@@ -29,8 +29,9 @@ func (d *fsConfigDB) queryFSConfigList() ([]*fsConfigModel, error) {
 func (d *fsConfigDB) updateFSConfigWithKey(m *fsConfigModel) error {
 	_, err := d.session.Update("fs_config").SetMap(map[string]interface{}{
 		"title":   m.Title,
+		"status":  m.Status,
 		"options": m.Options,
-	}).Where("key=?", m.Key).Exec()
+	}).Where("`key`=?", m.Key).Exec()
 	return err
 }
 
@@ -38,5 +39,6 @@ type fsConfigModel struct {
 	Title   string
 	Key     string
 	Options string
+	Status  int32
 	dbs.BaseModel
 }

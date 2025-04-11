@@ -76,9 +76,9 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 		auth.PUT("/user/liftban/:uid/:status", m.liftBanUser) // 解禁或封禁用户
 		auth.POST("/user/updatepassword", m.updatePwd)        // 修改用户密码
 		auth.GET("/user/devices", m.devices)                  // 查看某用户设备列表
-		auth.GET("/user/enable_2FA", m.enable2FA)             // 开启两步验证
+		auth.POST("/user/enable_2FA", m.enable2FA)            // 开启两步验证
 		auth.POST("/user/disable_2FA", m.disable2FA)          // 关闭两步验证
-		auth.GET("/user/bind_2FA", m.bind2FA)                 // 绑定两步验证秘钥
+		auth.POST("/user/bind_2FA", m.bind2FA)                // 绑定两步验证秘钥
 	}
 }
 
@@ -107,7 +107,7 @@ func (m *Manager) enable2FA(c *wkhttp.Context) {
 		codeURL = generateGoogleAuthQRCode(userInfo.Name, userInfo.TwoFASecret)
 
 	} else {
-		secret, err := generateGoogleAuthSecret()
+		secret, err = generateGoogleAuthSecret()
 		if err != nil {
 			m.Error("生成两步验证秘钥错误", zap.Error(err))
 			c.ResponseError(errors.New("生成两步验证秘钥错误"))
@@ -115,8 +115,8 @@ func (m *Manager) enable2FA(c *wkhttp.Context) {
 		}
 
 		err = m.db.updateUserWithUID(c.GetLoginUID(), map[string]interface{}{
-			"two_fa_on":     TwoFAOnOff,
-			"two_fa_secret": secret,
+			"2fa_on":     TwoFAOnOff,
+			"2fa_secret": secret,
 		})
 		if err != nil {
 			m.Error("更新用户信息错误", zap.Error(err))
@@ -142,8 +142,8 @@ func (m *Manager) disable2FA(c *wkhttp.Context) {
 	}
 
 	err = m.db.updateUserWithUID(c.GetLoginUID(), map[string]interface{}{
-		"two_fa_on":     TwoFAOnOff,
-		"two_fa_secret": "",
+		"2fa_on":     TwoFAOnOff,
+		"2fa_secret": "",
 	})
 	if err != nil {
 		m.Error("关闭两步验证错误", zap.Error(err))
@@ -212,7 +212,7 @@ func (m *Manager) bind2FA(c *wkhttp.Context) {
 	}
 
 	err = m.db.updateUserWithUID(c.GetLoginUID(), map[string]interface{}{
-		"two_fa_on": TwoFAOnOn,
+		"2fa_on": TwoFAOnOn,
 	})
 	if err != nil {
 		m.Error("绑定两步验证错误", zap.Error(err))
@@ -481,6 +481,7 @@ func (m *Manager) getCurrentUser(c *wkhttp.Context) {
 		WXOpenid:     user.WXOpenid,
 		GiteeUID:     user.GiteeUID,
 		GithubUID:    user.GithubUID,
+		TwoFAOn:      user.TwoFAOn,
 	})
 }
 
@@ -790,6 +791,7 @@ func (m *Manager) list(c *wkhttp.Context) {
 				GiteeUID:       user.GiteeUID,
 				GithubUID:      user.GithubUID,
 				WXOpenid:       user.WXOpenid,
+				TwoFAOn:        user.TwoFAOn,
 			})
 			i++
 		}
@@ -1303,6 +1305,7 @@ type managerUserResp struct {
 	WXOpenid       string `json:"wx_openid"`  // 微信openid
 	GiteeUID       string `json:"gitee_uid"`  // gitee uid
 	GithubUID      string `json:"github_uid"` // github uid
+	TwoFAOn        int    `json:"two_fa_on"`  // 两步验证
 }
 
 type managerFriendResp struct {

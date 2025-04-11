@@ -573,6 +573,84 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /manager/user/enable_2FA:
+    post:
+      tags:
+        - "userManager"
+      summary: "开启两步验证"
+      description: "开启两步验证"
+      operationId: "user enable 2FA"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            properties:
+              secret:
+                type: string
+                description: "两步验证秘钥"
+              code_url:
+                type: string
+                description: "两步验证二维码"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/user/disable_2FA:
+    post:
+      tags:
+        - "userManager"
+      summary: "关闭两步验证"
+      description: "关闭两步验证"
+      operationId: "user disable 2FA"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/user/bind_2FA:
+    post:
+      tags:
+        - "userManager"
+      summary: "绑定两步验证秘钥"
+      description: "绑定两步验证秘钥"
+      operationId: "user bind 2FA"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "code"
+          type: string
+          description: "验证码"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /user/register:
     post:
       tags:

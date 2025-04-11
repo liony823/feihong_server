@@ -69,7 +69,7 @@ func (d *managerDB) queryAppModule() ([]*appModuleModel, error) {
 // 查询某个app模块
 func (d *managerDB) queryAppModuleWithSid(sid string) (*appModuleModel, error) {
 	var m *appModuleModel
-	_, err := d.session.Select("*").From("app_module").Where("sid=?", sid).Load(&m)
+	_, err := d.session.Select("*").From("app_module").Where(" sid = ?", sid).Load(&m)
 	return m, err
 }
 
@@ -135,20 +135,20 @@ func (d *managerDB) updateSysMenu(m *sysMenuModel) error {
 		"hidden_in_menu": m.HiddenInMenu,
 		"redirect":       m.Redirect,
 		"component":      m.Component,
-	}).Where("key=?", m.Key).Exec()
+	}).Where("`key`=?", m.Key).Exec()
 	return err
 }
 
 // 删除菜单
 func (d *managerDB) deleteSysMenu(key string) error {
-	_, err := d.session.DeleteFrom("sys_menu").Where("key=?", key).Exec()
+	_, err := d.session.DeleteFrom("sys_menu").Where("`key`=?", key).Exec()
 	return err
 }
 
 // 查询菜单用户列表
 func (d *managerDB) getSysMenuUserListByUID(uid string) ([]string, error) {
 	var models *sysMenuUserModel
-	err := d.session.Select("*").From("sys_menu_user").Where("uid=?", uid).LoadOne(&models)
+	err := d.session.Select("*").From("sys_menu_user").Where("uid = ?", uid).LoadOne(&models)
 	if err != nil {
 		if err == dbr.ErrNotFound {
 			return nil, nil
@@ -171,6 +171,41 @@ func (d *managerDB) insertSysMenuUser(m *sysMenuUserModel) (int64, error) {
 // 分配菜单
 func (d *managerDB) assignMenu(uid string, menus []string) error {
 	_, err := d.session.Update("sys_menu_user").Set("menus", strings.Join(menus, ",")).Where("uid=?", uid).Exec()
+	return err
+}
+
+// 新增操作日志
+func (d *managerDB) insertOperationLog(m *operationLogModel) (int64, error) {
+	result, err := d.session.InsertInto("operation_log").Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
+	if err != nil {
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	return id, err
+}
+
+// 查询操作日志列表
+func (d *managerDB) queryOperationLogListWithPage(pageSize, page uint64, keyword string) ([]*operationLogModel, error) {
+	var models []*operationLogModel
+	_, err := d.session.Select("*").From("operation_log").Where("username like ? or uid like ? or path like ?", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%").Offset((page-1)*pageSize).Limit(pageSize).OrderDir("created_at", false).Load(&models)
+	return models, err
+}
+
+// 模糊查询操作日志数量
+func (d *managerDB) queryOperationLogCount(keyword string) (int64, error) {
+	var count int64
+	_, err := d.session.Select("count(*)").From("operation_log").Where("username like ? or uid like ? or path like ?", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%").Load(&count)
+	return count, err
+}
+
+// 批量删除操作日志
+func (d *managerDB) deleteOperationLogBatch(ids []int64) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	query := d.session.DeleteFrom("operation_log")
+	query.Where("id in ?", ids)
+	_, err := query.Exec()
 	return err
 }
 
@@ -221,4 +256,16 @@ type sysMenuUserModel struct {
 	dbs.BaseModel
 }
 
-
+type operationLogModel struct {
+	UID      string
+	Username string
+	Method   string
+	Path     string
+	IP       string
+	Payload  string
+	Response string
+	ErrorMsg string
+	Status   int
+	Duration int64
+	dbs.BaseModel
+}

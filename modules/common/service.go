@@ -155,57 +155,57 @@ func generateNums(len int, count int) []string {
 }
 
 type AppConfigResp struct {
-	RSAPublicKey                   string
-	Version                        int
-	SuperToken                     string
-	SuperTokenOn                   int
-	WelcomeMessage                 string // 登录欢迎语
-	NewUserJoinSystemGroup         int    // 新用户是否加入系统群聊
-	SearchByPhone                  int    // 是否可通过手机号搜索
-	RegisterInviteOn               int    // 是否开启注册邀请
-	SendWelcomeMessageOn           int    // 是否发送登录欢迎语
-	InviteSystemAccountJoinGroupOn int    // 是否允许邀请系统账号进入群聊
-	RegisterUserMustCompleteInfoOn int    // 是否要求注册用户必须填写完整信息
-	ChannelPinnedMessageMaxCount   int    // 频道置顶消息最大数量
-	CanModifyApiUrl                int    // 是否可以修改API地址
+	RSAPublicKey                   string `json:"rsa_public_key"`                      // 公钥
+	Version                        int    `json:"version"`                             // 版本
+	SuperToken                     string `json:"super_token"`                         // 超级token
+	SuperTokenOn                   int    `json:"super_token_on"`                      // 超级token是否开启
+	WelcomeMessage                 string `json:"welcome_message"`                     // 登录欢迎语
+	NewUserJoinSystemGroup         int    `json:"new_user_join_system_group"`          // 新用户是否加入系统群聊
+	SearchByPhone                  int    `json:"search_by_phone"`                     // 是否可通过手机号搜索
+	RegisterInviteOn               int    `json:"register_invite_on"`                  // 是否开启注册邀请
+	SendWelcomeMessageOn           int    `json:"send_welcome_message_on"`             // 是否发送登录欢迎语
+	InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 是否允许邀请系统账号进入群聊
+	RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 是否要求注册用户必须填写完整信息
+	ChannelPinnedMessageMaxCount   int    `json:"channel_pinned_message_max_count"`    // 频道置顶消息最大数量
+	CanModifyApiUrl                int    `json:"can_modify_api_url"`                  // 是否可以修改API地址
 
-	ShortnoEditOff                 int    // 是否关闭短编号编辑
-	RevokeSecond                   int    // 消息可撤回时长
+	ShortnoEditOff int `json:"shortno_edit_off"` // 是否关闭短编号编辑
+	RevokeSecond   int `json:"revoke_second"`    // 消息可撤回时长
 
 	// 新增字段
-	IpWhiteList                            string // 后台IP白名单
-	LoginType                              int    // app登录类型
-	SensitiveWords                         string // 敏感词
-	DisableChangeDevice                    int    // 是否禁止更换设备
-	SignupDeviceLimit                      int    // 设备限制注册限制数
-	SigleIpRegisterLimitIn12hour           int    // 单IP12小时注册限制数
-	AutoClearHistoryMsg                    int    // 自动清除几天前历史消息
-	MiniProgramVisible                     int    // 小程序页是否可见
-	DiscoveryVisible                       int    // 发现页是否可见
-	ChargeAndPayoutVisible                 int    // 充值和提现是否可见
-	VoiceCallVisible                       int    // 语音通话是否可见
-	VideoCallVisible                       int    // 视频通话是否可见
-	SignupInviteCodeVisible                int    // 注册邀请码是否可见
-	SigninAuthCodeVisible                  int    // 登录授权码是否可见
-	FriendOnlineStatusVisible              int    // 好友在线状态是否可见
-	MobileMsgReadStatusVisible             int    // 手机消息已读状态是否可见
-	SignRedEnvelopeVisible                 int    // 签到红包模块是否开启
-	MineWalletVisible                      int    // 我的钱包是否开启
-	WalletPayoutMin                        int    // 钱包提现最小金额
-	RedEnvelopeVisible                     int    // 红包模块是否开启
-	TransferVisible                        int    // 转账模块是否开启
-	TransferMinAmount                      int    // 转账最小金额
-	MobileEditMsg                          int    // 手机端是否可以编辑消息
-	GroupMemberSeeMember                   int    // 普通群成员是否可以查看其他群成员
-	MsgTimeVisible                         int    // 消息时间是否可见
-	PinnedConversationSync                 int    // 置顶会话是否同步
-	OnlyInternalFriendAdd                  int    // 仅内部号可被加好友及加非内部号好友
-	OnlyInternalFriendCreateGroup          int    // 仅内部号可建群
-	OnlyInternalFriendSendGroupRedEnvelope int    // 仅内部号可发群红包
-	OnlyInternalFriendSendGroupCard        int    // 仅内部号可群内推送名片
-	OnlyInternalFriendGroupRobotFreeMsg    int    // 群机器人免消息
-	GroupMemberLimit                       int    // 群人数限制
-	UserAgreementContent                   string // 用户协议内容
-	PrivacyPolicyContent                   string // 隐私政策内容
-	MomentsVisible                         int    // 好友分享是否可见
+	IpWhiteList                            string `json:"ip_white_list"`                                // 后台IP白名单
+	LoginType                              int    `json:"login_type"`                                   // app登录类型
+	SensitiveWords                         string `json:"sensitive_words"`                              // 敏感词
+	DisableChangeDevice                    int    `json:"disable_change_device"`                        // 是否禁止更换设备
+	SignupDeviceLimit                      int    `json:"signup_device_limit"`                          // 设备限制注册限制数
+	SigleIpRegisterLimitIn12hour           int    `json:"sigle_ip_register_limit_in12hour"`             // 单IP12小时注册限制数
+	AutoClearHistoryMsg                    int    `json:"auto_clear_history_msg"`                       // 自动清除几天前历史消息
+	MiniProgramVisible                     int    `json:"mini_program_visible"`                         // 小程序页是否可见
+	DiscoveryVisible                       int    `json:"discovery_visible"`                            // 发现页是否可见
+	ChargeAndPayoutVisible                 int    `json:"charge_and_payout_visible"`                    // 充值和提现是否可见
+	VoiceCallVisible                       int    `json:"voice_call_visible"`                           // 语音通话是否可见
+	VideoCallVisible                       int    `json:"video_call_visible"`                           // 视频通话是否可见
+	SignupInviteCodeVisible                int    `json:"signup_invite_code_visible"`                   // 注册邀请码是否可见
+	SigninAuthCodeVisible                  int    `json:"signin_auth_code_visible"`                     // 登录授权码是否可见
+	FriendOnlineStatusVisible              int    `json:"friend_online_status_visible"`                 // 好友在线状态是否可见
+	MobileMsgReadStatusVisible             int    `json:"mobile_msg_read_status_visible"`               // 手机消息已读状态是否可见
+	SignRedEnvelopeVisible                 int    `json:"sign_red_envelope_visible"`                    // 签到红包模块是否开启
+	MineWalletVisible                      int    `json:"mine_wallet_visible"`                          // 我的钱包是否开启
+	WalletPayoutMin                        int    `json:"wallet_payout_min"`                            // 钱包提现最小金额
+	RedEnvelopeVisible                     int    `json:"red_envelope_visible"`                         // 红包模块是否开启
+	TransferVisible                        int    `json:"transfer_visible"`                             // 转账模块是否开启
+	TransferMinAmount                      int    `json:"transfer_min_amount"`                          // 转账最小金额
+	MobileEditMsg                          int    `json:"mobile_edit_msg"`                              // 手机端是否可以编辑消息
+	GroupMemberSeeMember                   int    `json:"group_member_see_member"`                      // 普通群成员是否可以查看其他群成员
+	MsgTimeVisible                         int    `json:"msg_time_visible"`                             // 消息时间是否可见
+	PinnedConversationSync                 int    `json:"pinned_conversation_sync"`                     // 置顶会话是否同步
+	OnlyInternalFriendAdd                  int    `json:"only_internal_friend_add"`                     // 仅内部号可被加好友及加非内部号好友
+	OnlyInternalFriendCreateGroup          int    `json:"only_internal_friend_create_group"`            // 仅内部号可建群
+	OnlyInternalFriendSendGroupRedEnvelope int    `json:"only_internal_friend_send_group_red_envelope"` // 仅内部号可发群红包
+	OnlyInternalFriendSendGroupCard        int    `json:"only_internal_friend_send_group_card"`         // 仅内部号可群内推送名片
+	OnlyInternalFriendGroupRobotFreeMsg    int    `json:"only_internal_friend_group_robot_free_msg"`    // 群机器人免消息
+	GroupMemberLimit                       int    `json:"group_member_limit"`                           // 群人数限制
+	UserAgreementContent                   string `json:"user_agreement_content"`                       // 用户协议内容
+	PrivacyPolicyContent                   string `json:"privacy_policy_content"`                       // 隐私政策内容
+	MomentsVisible                         int    `json:"moments_visible"`                              // 好友分享是否可见
 }

@@ -31,3 +31,5 @@ logs/
 wukongimdata/
 
 miniodata/
+
+__debug_bin*

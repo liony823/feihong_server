@@ -723,6 +723,81 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /manager/common/operation_log:
+    get:
+      tags:
+        - "commonManager"
+      summary: "获取操作日志"
+      description: "获取操作日志"
+      operationId: "manager common operationlog"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数量"
+        - in: "query"
+          name: "keyword"
+          type: string
+          description: "关键字"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  $ref: "#/definitions/managerOperationLog"
+              count:
+                type: integer
+                description: "总数"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/common/operation_log/batch:
+    delete:
+      tags:
+        - "commonManager"
+      summary: "批量删除操作日志"
+      description: "批量删除操作日志"
+      operationId: "manager common operationlog batch delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "批量删除操作日志"
+          required: true
+          schema:
+            type: object
+            properties:
+              ids:
+                type: array
+                items:
+                  type: integer
+                  description: "ID"
+      responses:
+        $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /health:
     get:
       tags:
@@ -1114,3 +1189,46 @@ definitions:
       updated_at:
         type: "string"
         description: "更新时间"
+  managerOperationLog:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        description: "ID"
+      uid:
+        type: "string"
+        description: "用户ID"
+      username:
+        type: "string"
+        description: "用户名"
+      method:
+        type: "string"
+        description: "方法"
+      path:
+        type: "string"
+        description: "路径"
+      ip:
+        type: "string"
+        description: "IP"
+      payload:
+        type: "string"
+        description: "请求参数"
+      response:
+        type: "string"
+        description: "响应结果"
+      error_msg:
+        type: "string"
+        description: "错误信息"
+      status:
+        type: "integer"
+        description: "状态"
+      duration:
+        type: "integer"
+        description: "耗时"
+      created_at:
+        type: "string"
+        description: "创建时间"
+      updated_at:
+        type: "string"
+        description: "更新时间"
+        

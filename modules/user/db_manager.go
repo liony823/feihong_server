@@ -118,6 +118,9 @@ func (m *managerDB) queryUserWithUID(uid string) (*managerUserModel, error) {
 
 // 通过uid更新用户信息
 func (m *managerDB) updateUserWithUID(uid string, userInfo map[string]interface{}) error {
+	if len(userInfo) == 0 {
+		return nil
+	}
 	_, err := m.session.Update("user").SetMap(userInfo).Where("uid=?", uid).Exec()
 	return err
 }
@@ -133,8 +136,8 @@ type managerLoginModel struct {
 	Name        string
 	Password    string
 	Role        string
-	TwoFAOn     int
-	TwoFASecret string
+	TwoFAOn     int    `db:"2fa_on"`
+	TwoFASecret string `db:"2fa_secret"`
 }
 
 type managerUserModel struct {
@@ -149,8 +152,8 @@ type managerUserModel struct {
 	GithubUID   string // github uid
 	Sex         int
 	IsDestroy   int
-	TwoFAOn     int
-	TwoFASecret string
+	TwoFAOn     int    `db:"2fa_on"`
+	TwoFASecret string `db:"2fa_secret"`
 	db.BaseModel
 }
 

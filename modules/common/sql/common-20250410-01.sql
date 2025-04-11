@@ -1,19 +1,11 @@
 -- +migrate Up
 
 
-CREATE TABLE `sms_config` (
-    `id`  INT   NOT NULL    AUTO_INCREMENT ,
-	`key` VARCHAR(255)   NOT NULL      ,
-	`options` JSON   NOT NULL     COMMENT '配置信息' ,
-    `created_at` TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP    COMMENT '创建时间' ,
-    `updated_at` TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP    COMMENT '更新时间',
-	PRIMARY KEY  (`id`, `key`)  
-) COMMENT='短信商配置';
-
 CREATE TABLE `fs_config` (
     `id`  INT   NOT NULL    AUTO_INCREMENT ,
     `title` VARCHAR(255)   NULL   COMMENT '标题',
 	`key` VARCHAR(255)   NOT NULL      ,
+	`status`  SMALLINT   NOT NULL DEFAULT 0 COMMENT '状态',
 	`options` JSON   NOT NULL     COMMENT '配置信息' ,
     `created_at` TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP    COMMENT '创建时间' ,
     `updated_at` TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP    COMMENT '更新时间',

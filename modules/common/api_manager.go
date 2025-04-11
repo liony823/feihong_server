@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
@@ -51,6 +52,13 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 		auth.POST("/common/menu/user/:uid", m.assignMenu)        // 新增菜单用户
 		auth.GET("/common/fs_config", m.getFsConfigList)         // 获取文件上传配置
 		auth.PUT("/common/fs_config", m.updateFSConfig)          // 修改文件上传配置
+
+	}
+
+	withoutLog := r.Group("/v1/manager", m.ctx.BasicAuthMiddleware(r), m.ctx.AuthMiddleware(r))
+	{
+		withoutLog.GET("/common/operation_log", m.getOperationLogList)              // 获取操作日志列表
+		withoutLog.DELETE("/common/operation_log/batch", m.deleteOperationLogBatch) // 批量删除操作日志
 	}
 
 	r.GET("/v1/manager/health", m.ctx.BasicAuthMiddleware(r), func(c *wkhttp.Context) {
@@ -254,7 +262,7 @@ func (m *Manager) updateConfig(c *wkhttp.Context) {
 		SensitiveWords                         string `json:"sensitive_words"`                              // 敏感词
 		DisableChangeDevice                    int    `json:"disable_change_device"`                        // 是否禁止更换设备
 		SignupDeviceLimit                      int    `json:"signup_device_limit"`                          // 设备限制注册限制数
-		SigleIpRegisterLimitIn12hour           int    `json:"sigle_ip_register_limit_in_12hour"`            // 单IP12小时注册限制数
+		SigleIpRegisterLimitIn12hour           int    `json:"sigle_ip_register_limit_in12hour"`             // 单IP12小时注册限制数
 		AutoClearHistoryMsg                    int    `json:"auto_clear_history_msg"`                       // 自动清除几天前历史消息
 		SigninAuthCodeVisible                  int    `json:"signin_auth_code_visible"`                     // 登录授权码是否可见
 		FriendOnlineStatusVisible              int    `json:"friend_online_status_visible"`                 // 好友在线状态是否可见
@@ -301,7 +309,7 @@ func (m *Manager) updateConfig(c *wkhttp.Context) {
 	configMap["sensitive_words"] = req.SensitiveWords
 	configMap["disable_change_device"] = req.DisableChangeDevice
 	configMap["signup_device_limit"] = req.SignupDeviceLimit
-	configMap["sigle_ip_register_limit_in_12hour"] = req.SigleIpRegisterLimitIn12hour
+	configMap["sigle_ip_register_limit_in12hour"] = req.SigleIpRegisterLimitIn12hour
 	configMap["auto_clear_history_msg"] = req.AutoClearHistoryMsg
 	configMap["signin_auth_code_visible"] = req.SigninAuthCodeVisible
 	configMap["friend_online_status_visible"] = req.FriendOnlineStatusVisible
@@ -722,11 +730,18 @@ func (m *Manager) getFsConfigList(c *wkhttp.Context) {
 	list := make([]*fsConfig, 0)
 	if len(models) > 0 {
 		for _, model := range models {
+			options, err := util.JsonToMap(model.Options)
+			if err != nil {
+				m.Error("解析文件上传配置失败", zap.Error(err))
+				c.ResponseError(errors.New("解析文件上传配置失败"))
+				return
+			}
 			list = append(list, &fsConfig{
 				Id:        model.Id,
 				Key:       model.Key,
+				Status:    model.Status,
 				Title:     model.Title,
-				Options:   model.Options,
+				Options:   options,
 				CreatedAt: model.CreatedAt.String(),
 				UpdatedAt: model.UpdatedAt.String(),
 			})
@@ -744,23 +759,96 @@ func (m *Manager) updateFSConfig(c *wkhttp.Context) {
 		return
 	}
 	type fsConfigReqVO struct {
-		Key    string `json:"key"`
-		Title  string `json:"title"`
-		Option string `json:"option"`
+		Key     string                 `json:"key"`
+		Status  int32                  `json:"status"`
+		Title   string                 `json:"title"`
+		Options map[string]interface{} `json:"options"`
 	}
 	var req fsConfigReqVO
 	if err := c.BindJSON(&req); err != nil {
 		c.ResponseError(errors.New("请求数据格式有误！"))
 		return
 	}
+	options := util.ToJson(req.Options)
 	err = m.fsConfigDB.updateFSConfigWithKey(&fsConfigModel{
 		Key:     req.Key,
 		Title:   req.Title,
-		Options: req.Option,
+		Options: options,
 	})
 	if err != nil {
 		m.Error("修改文件上传配置失败", zap.Error(err))
 		c.ResponseError(errors.New("修改文件上传配置失败"))
+		return
+	}
+	c.ResponseOK()
+}
+
+// 获取操作日志列表
+func (m *Manager) getOperationLogList(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	pageIndex, pageSize := c.GetPage()
+	keyword := c.Query("keyword")
+	models, err := m.db.queryOperationLogListWithPage(uint64(pageSize), uint64(pageIndex), keyword)
+	if err != nil {
+		m.Error("查询操作日志列表失败", zap.Error(err))
+		c.ResponseError(errors.New("查询操作日志列表失败"))
+		return
+	}
+	count, err := m.db.queryOperationLogCount(keyword)
+	if err != nil {
+		m.Error("查询操作日志数量失败", zap.Error(err))
+		c.ResponseError(errors.New("查询操作日志数量失败"))
+		return
+	}
+	list := make([]*managerOperationLog, 0)
+	if len(models) > 0 {
+		for _, model := range models {
+			list = append(list, &managerOperationLog{
+				ID:        model.Id,
+				UID:       model.UID,
+				Username:  model.Username,
+				Method:    model.Method,
+				Path:      model.Path,
+				IP:        model.IP,
+				Payload:   model.Payload,
+				Response:  model.Response,
+				ErrorMsg:  model.ErrorMsg,
+				Status:    model.Status,
+				Duration:  model.Duration,
+				CreatedAt: model.CreatedAt.String(),
+				UpdatedAt: model.UpdatedAt.String(),
+			})
+		}
+	}
+	c.Response(map[string]interface{}{
+		"list":  list,
+		"count": count,
+	})
+}
+
+// 批量删除操作日志
+func (m *Manager) deleteOperationLogBatch(c *wkhttp.Context) {
+	err := c.CheckLoginRoleIsSuperAdmin()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	type reqVO struct {
+		Ids []int64 `json:"ids"`
+	}
+	var req reqVO
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+	err = m.db.deleteOperationLogBatch(req.Ids)
+	if err != nil {
+		m.Error("删除操作日志失败", zap.Error(err))
+		c.ResponseError(errors.New("删除操作日志失败"))
 		return
 	}
 	c.ResponseOK()
@@ -791,10 +879,27 @@ type managerAppModule struct {
 }
 
 type fsConfig struct {
-	Id        int64  `json:"id"`
-	Key       string `json:"key"`
-	Title     string `json:"title"`
-	Options   string `json:"options"`
+	Id        int64                  `json:"id"`
+	Key       string                 `json:"key"`
+	Title     string                 `json:"title"`
+	Status    int32                  `json:"status"`
+	Options   map[string]interface{} `json:"options"`
+	CreatedAt string                 `json:"created_at"`
+	UpdatedAt string                 `json:"updated_at"`
+}
+
+type managerOperationLog struct {
+	ID        int64  `json:"id"`
+	UID       string `json:"uid"`
+	Username  string `json:"username"`
+	Method    string `json:"method"`
+	Path      string `json:"path"`
+	IP        string `json:"ip"`
+	Payload   string `json:"payload"`
+	Response  string `json:"response"`
+	ErrorMsg  string `json:"error_msg"`
+	Status    int    `json:"status"`
+	Duration  int64  `json:"duration"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }

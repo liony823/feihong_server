@@ -27,7 +27,6 @@ INSERT INTO `sys_menu` (`key`, `path`, `name`, `icon`, `sort`, `parent_key`, `la
 ('system-menu', '/system/menu', '菜单管理', '', 2, 'system', false, false, '', './system/menu'),
 ('system-admin', '/system/admin', '账户管理', '', 3, 'system', false, false, '', './system/admin'),
 ('system-client', '/chat/client', '项目设置', '', 4, 'system', false, false, '', './system/client'),
-('system-sms', '/chat/sms', '短信配置', '', 5, 'system', false, false, '', './system/sms'),
 ('system-bucket', '/chat/bucket', '存储桶配置', '', 6, 'system', false, false, '', './system/bucket'),
 ('system-sign', '/chat/sign', '签到配置', '', 7, 'system', false, false, '', './system/sign'),
 ('system-ua_pp', '/chat/ua_pp', '隐私政策', '', 8, 'system', false, false, '', './system/ua_pp'),

@@ -50,12 +50,6 @@ func (d *managerDB) queryDefaultApplet() ([]*appletModel, error) {
 	return model, err
 }
 
-// 查询小程序
-func (d *managerDB) queryAppletOnDefault() (*appletModel, error) {
-	var model *appletModel
-	_, err := d.session.Select("*").From("applet_config").Where("is_default = 1").Load(&model)
-	return model, err
-}
 
 // 更新小程序
 func (d *managerDB) updateApplet(m *appletModel) error {

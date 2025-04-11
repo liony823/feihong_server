@@ -30,9 +30,9 @@ basicAuth:
 #  asynctaskRedisAddr: "" # 异步任务的redis地址 不写默认为RedisAddr的地址
 
 ##################### 外网配置 ####################
-#external:
-#  ip: "" # 外网ip
-#  baseURL: "" # 外网访问地址 例如 http://10.2.3.1:8090
+external:
+ ip: "127.0.0.1" # 外网ip
+ baseURL: "http://127.0.0.1:8090" # 外网访问地址 例如 http://10.2.3.1:8090
 #  webLoginURL: "" # web im的登录地址 例如 https://web.tangsengdaodao.com
 
 ##################### 日志配置 ####################
@@ -59,11 +59,11 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #  templateId: "" # unisms TemplateId 验证码变量名为code
 
 ##################### 文件服务 ####################
-#fileService: "minio" # 文件服务 minio or aliyunOSS or seaweedFS or qiniu
-#minio: # minio配置
-#  url: "" # minio地址 格式：http://xx.xx.xx.xx:9000
-#  accessKeyID: "" # minio accessKeyID
-#  secretAccessKey: ""  # minio secretAccessKey
+fileService: "minio" # 文件服务 minio or aliyunOSS or seaweedFS or qiniu
+minio: # minio配置
+ url: "http://127.0.0.1:9000" # minio地址 格式：http://xx.xx.xx.xx:9000
+ accessKeyID: "admin" # minio accessKeyID
+ secretAccessKey: "12345678"  # minio secretAccessKey
 #oss:  # aliyun oss配置
 #  endpoint: "" # oss endpoint 例如 oss-cn-hangzhou.aliyuncs.com
 #  bucketURL: "" # oss bucketURL 例如 https://xxxx.oss-cn-hangzhou.aliyuncs.com

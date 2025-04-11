@@ -50,7 +50,6 @@ func (d *managerDB) queryDefaultApplet() ([]*appletModel, error) {
 	return model, err
 }
 
-
 // 更新小程序
 func (d *managerDB) updateApplet(m *appletModel) error {
 	_, err := d.session.Update("applet_config").SetMap(map[string]interface{}{
@@ -59,7 +58,7 @@ func (d *managerDB) updateApplet(m *appletModel) error {
 		"link":         m.Link,
 		"priority":     m.Priority,
 		"status":       m.Status,
-	}).Where("key = ?", m.Key).Exec()
+	}).Where("`key` = ?", m.Key).Exec()
 	return err
 }
 
@@ -67,13 +66,13 @@ func (d *managerDB) updateApplet(m *appletModel) error {
 func (d *managerDB) setDefaultAppletTx(m *appletModel, tx *dbr.Tx) error {
 	_, err := tx.Update("applet_config").SetMap(map[string]interface{}{
 		"is_default": m.IsDefault,
-	}).Where("key = ?", m.Key).Exec()
+	}).Where("`key` = ?", m.Key).Exec()
 	return err
 }
 
 // 删除小程序
 func (d *managerDB) deleteApplet(key string) error {
-	_, err := d.session.DeleteFrom("applet_config").Where("key = ?", key).Exec()
+	_, err := d.session.DeleteFrom("applet_config").Where("`key` = ?", key).Exec()
 	return err
 }
 

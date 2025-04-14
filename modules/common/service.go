@@ -184,8 +184,7 @@ type AppConfigResp struct {
 	DiscoveryVisible                       int    `json:"discovery_visible"`                            // 发现页是否可见
 	ChargeAndPayoutVisible                 int    `json:"charge_and_payout_visible"`                    // 充值和提现是否可见
 	VoiceCallVisible                       int    `json:"voice_call_visible"`                           // 语音通话是否可见
-	VideoCallVisible                       int    `json:"video_call_visible"`                           // 视频通话是否可见
-	SignupInviteCodeVisible                int    `json:"signup_invite_code_visible"`                   // 注册邀请码是否可见
+	VideoCallVisible                       int    `json:"video_call_visible"`                           // 视频通话是否可见                // 注册邀请码是否可见
 	SigninAuthCodeVisible                  int    `json:"signin_auth_code_visible"`                     // 登录授权码是否可见
 	FriendOnlineStatusVisible              int    `json:"friend_online_status_visible"`                 // 好友在线状态是否可见
 	MobileMsgReadStatusVisible             int    `json:"mobile_msg_read_status_visible"`               // 手机消息已读状态是否可见

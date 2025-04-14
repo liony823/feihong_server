@@ -23,8 +23,8 @@ basicAuth:
 #  managerToken: "" # 悟空IM的管理者token 悟空IM配置了就需要填写，没配置就不需要
 
 ##################### db ####################
-#db:
-#  mysqlAddr: "root:demo@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=true" # mysql连接地址
+db:
+ mysqlAddr: "root:demo@tcp(127.0.0.1:3306)/test2?charset=utf8mb4&parseTime=true" # mysql连接地址
 #  redisAddr: "" # redis地址
 #  redisPass: "" # redis密码
 #  asynctaskRedisAddr: "" # 异步任务的redis地址 不写默认为RedisAddr的地址
@@ -112,7 +112,8 @@ minio: # minio配置
 #    projectId: "" # serviceAccount的JSON中的project_id值
 #    channelID: "" # 忽略占位
 ##################### 注册 ####################
-#register:
+register:
+   usernameOn: true # 是否开启用户名注册
 #  off: false # 是否关闭注册
 #  onlyChina: false # 是否只允许中国手机号注册
 #  stickerAddOff: false # 是否关闭注册添加表情

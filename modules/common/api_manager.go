@@ -6,9 +6,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
 	"go.uber.org/zap"
 )
@@ -294,40 +294,21 @@ func (m *Manager) updateConfig(c *wkhttp.Context) {
 		return
 	}
 	configMap := map[string]interface{}{}
-	configMap["revoke_second"] = req.RevokeSecond
-	configMap["welcome_message"] = req.WelcomeMessage
-	configMap["new_user_join_system_group"] = req.NewUserJoinSystemGroup
-	configMap["search_by_phone"] = req.SearchByPhone
-	configMap["register_invite_on"] = req.RegisterInviteOn
-	configMap["send_welcome_message_on"] = req.SendWelcomeMessageOn
-	configMap["invite_system_account_join_group_on"] = req.InviteSystemAccountJoinGroupOn
-	configMap["register_user_must_complete_info_on"] = req.RegisterUserMustCompleteInfoOn
-	configMap["channel_pinned_message_max_count"] = req.ChannelPinnedMessageMaxCount
-	configMap["can_modify_api_url"] = req.CanModifyApiUrl
-	configMap["ip_white_list"] = req.IpWhiteList
-	configMap["login_type"] = req.LoginType
-	configMap["sensitive_words"] = req.SensitiveWords
-	configMap["disable_change_device"] = req.DisableChangeDevice
-	configMap["signup_device_limit"] = req.SignupDeviceLimit
-	configMap["sigle_ip_register_limit_in12hour"] = req.SigleIpRegisterLimitIn12hour
-	configMap["auto_clear_history_msg"] = req.AutoClearHistoryMsg
-	configMap["signin_auth_code_visible"] = req.SigninAuthCodeVisible
-	configMap["friend_online_status_visible"] = req.FriendOnlineStatusVisible
-	configMap["mobile_msg_read_status_visible"] = req.MobileMsgReadStatusVisible
-	configMap["wallet_payout_min"] = req.WalletPayoutMin
-	configMap["transfer_min_amount"] = req.TransferMinAmount
-	configMap["mobile_edit_msg"] = req.MobileEditMsg
-	configMap["group_member_see_member"] = req.GroupMemberSeeMember
-	configMap["msg_time_visible"] = req.MsgTimeVisible
-	configMap["pinned_conversation_sync"] = req.PinnedConversationSync
-	configMap["only_internal_friend_add"] = req.OnlyInternalFriendAdd
-	configMap["only_internal_friend_create_group"] = req.OnlyInternalFriendCreateGroup
-	configMap["only_internal_friend_send_group_red_envelope"] = req.OnlyInternalFriendSendGroupRedEnvelope
-	configMap["only_internal_friend_send_group_card"] = req.OnlyInternalFriendSendGroupCard
-	configMap["only_internal_friend_group_robot_free_msg"] = req.OnlyInternalFriendGroupRobotFreeMsg
-	configMap["group_member_limit"] = req.GroupMemberLimit
-	configMap["user_agreement_content"] = req.UserAgreementContent
-	configMap["privacy_policy_content"] = req.PrivacyPolicyContent
+
+	// 获取请求体中的所有字段
+	reqMap := make(map[string]interface{})
+	if err := util.CopyStructFields(&reqMap, req); err != nil {
+		m.Error("解析请求数据错误", zap.Error(err))
+		c.ResponseError(errors.New("解析请求数据错误"))
+		return
+	}
+
+	// 只更新前端传递的字段
+	for key, value := range reqMap {
+		if !util.IsZeroValue(value) {
+			configMap[util.UnderscoreName(key)] = value
+		}
+	}
 
 	err = m.appconfigDB.updateWithMap(configMap, appConfigM.Id)
 	if err != nil {

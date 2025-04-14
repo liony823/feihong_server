@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/model"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -36,10 +38,43 @@ func (u *User) usernameRegister(c *wkhttp.Context) {
 		c.Response(errors.New("密码不能为空！"))
 		return
 	}
-	if len(req.Username) < 8 || len(req.Username) > 22 {
-		c.ResponseError(errors.New("用户名必须在8-22位"))
+	if len(req.Username) < 6 || len(req.Username) > 18 {
+		c.ResponseError(errors.New("用户名必须在6-18位"))
 		return
 	}
+	appConfig, err := u.commonService.GetAppConfig()
+	if err != nil {
+		u.Error("查询应用设置错误", zap.Error(err))
+		c.ResponseError(err)
+		return
+	}
+	var registerInviteOn = 0
+	if appConfig != nil {
+		registerInviteOn = appConfig.RegisterInviteOn
+	}
+	var invite *model.Invite
+	if registerInviteOn == 1 {
+		if req.InviteCode == "" {
+			c.ResponseError(errors.New("邀请码不能为空"))
+			return
+		}
+		var inviteCodeIsExist = false
+		modules := register.GetModules(u.ctx)
+		for _, m := range modules {
+			if m.BussDataSource.GetInviteCode != nil {
+				invite, _ = m.BussDataSource.GetInviteCode(req.InviteCode)
+				if invite != nil && invite.Uid != "" {
+					inviteCodeIsExist = true
+					break
+				}
+			}
+		}
+		if !inviteCodeIsExist {
+			c.ResponseError(errors.New("邀请码不存在"))
+			return
+		}
+	}
+
 	userInfo, err := u.db.QueryByUsername(req.Username)
 	if err != nil {
 		u.Error("查询用户信息失败！", zap.String("username", req.Username))
@@ -51,7 +86,7 @@ func (u *User) usernameRegister(c *wkhttp.Context) {
 		return
 	}
 	// 通过用户名注册
-	u.registerWithUsername(req.Username, req.Name, req.Password, int(req.Flag), req.Device, c)
+	u.registerWithUsername(req.Username, req.Name, req.Password, int(req.Flag), req.Device, c, invite)
 }
 
 // 用户名登录
@@ -109,7 +144,7 @@ func (u *User) usernameLogin(c *wkhttp.Context) {
 	publicIP := util.GetClientPublicIP(c.Request)
 	go u.sentWelcomeMsg(publicIP, userInfo.UID)
 }
-func (u *User) registerWithUsername(username string, name string, password string, flag int, device *deviceReq, c *wkhttp.Context) {
+func (u *User) registerWithUsername(username string, name string, password string, flag int, device *deviceReq, c *wkhttp.Context, invite *model.Invite) {
 	registerSpan := u.ctx.Tracer().StartSpan(
 		"user.register",
 		opentracing.ChildOf(c.GetSpanContext()),
@@ -144,7 +179,7 @@ func (u *User) registerWithUsername(username string, name string, password strin
 		}
 	}()
 	publicIP := util.GetClientPublicIP(c.Request)
-	result, err := u.createUserWithRespAndTx(registerSpanCtx, model, publicIP, nil, tx, func() error {
+	result, err := u.createUserWithRespAndTx(registerSpanCtx, model, publicIP, invite, tx, func() error {
 		err := tx.Commit()
 		if err != nil {
 			tx.Rollback()
@@ -474,9 +509,10 @@ func (u *User) updatePwd(c *wkhttp.Context) {
 }
 
 type usernameRegisterReq struct {
-	Name     string     `json:"name"`     // 昵称
-	Username string     `json:"username"` // 用户名
-	Password string     `json:"password"`
-	Flag     uint8      `json:"flag"`   // 注册设备的标记 0.APP 1.PC
-	Device   *deviceReq `json:"device"` //注册用户设备信息
+	Name       string     `json:"name"`     // 昵称
+	Username   string     `json:"username"` // 用户名
+	Password   string     `json:"password"`
+	Flag       uint8      `json:"flag"`        // 注册设备的标记 0.APP 1.PC
+	Device     *deviceReq `json:"device"`      //注册用户设备信息
+	InviteCode string     `json:"invite_code"` // 邀请码
 }

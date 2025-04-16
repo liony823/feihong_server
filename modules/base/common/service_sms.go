@@ -61,7 +61,7 @@ func (s *SMSService) SendVerifyCode(ctx context.Context, zone, phone string, cod
 
 	verifyCode := ""
 	rand.Seed(int64(time.Now().Nanosecond()))
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 6; i++ {
 		verifyCode += fmt.Sprintf("%v", rand.Intn(10))
 	}
 	s.Info("发送验证码", zap.String("code", verifyCode))
@@ -70,7 +70,7 @@ func (s *SMSService) SendVerifyCode(ctx context.Context, zone, phone string, cod
 	if err != nil {
 		return err
 	}
-	err = smsProvider.SendSMS(ctx, zone, phone, verifyCode)
+	// err = smsProvider.SendSMS(ctx, zone, phone, verifyCode)
 	return err
 }
 

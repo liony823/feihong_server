@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"time"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/db"
@@ -143,9 +144,22 @@ func (d *DB) QueryUserWithOnlyShortNo(shortNo string) (*Model, error) {
 	return model, err
 }
 
+// QueryUserWithOnlyUsername 通过username获取用户基本信息
+func (d *DB) QueryUserWithOnlyUsername(username string) (*Model, error) {
+	var model *Model
+	_, err := d.session.Select("user.name,user.username").From("user").Where("username=?", username).Load(&model)
+	return model, err
+}
+
 // UpdateUsersWithField 修改用户基本资料
 func (d *DB) UpdateUsersWithField(field string, value string, uid string) error {
 	_, err := d.session.Update("user").Set(field, value).Where("uid=?", uid).Exec()
+	return err
+}
+
+// UpdateUserWithUpdatedAtUsername 修改用户名最后的修改时间
+func (d *DB) UpdateUserWithUpdatedAtUsername(value int64, uid string) error {
+	_, err := d.session.Update("user").Set("updated_at_username", value).Where("uid=?", uid).Exec()
 	return err
 }
 
@@ -285,7 +299,34 @@ func (d *DB) updateUserRedDotTx(m *userRedDotModel, tx *dbr.Tx) error {
 	return err
 }
 
+func (d *DB) insertUserSecurity(m *UserSecurityModel) error {
+	_, err := d.session.InsertInto("user_security").Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
+	return err
+}
+
+func (d *DB) updateUserSecurity(m *UserSecurityModel) error {
+	_, err := d.session.Update("user_security").SetMap(map[string]interface{}{
+		"answer":   m.Answer,
+		"question": m.Question,
+	}).Where("uid=?", m.UID).Exec()
+	return err
+}
+
+func (d *DB) queryUserSecurity(uid string) (*UserSecurityModel, error) {
+	var model *UserSecurityModel
+	_, err := d.session.Select("*").From("user_security").Where("uid=?", uid).Load(&model)
+	return model, err
+}
+
 // ------------ model ------------
+
+// UserSecurityModel 用户密保
+type UserSecurityModel struct {
+	UID      string // 用户唯一id
+	Question string // 密保问题id
+	Answer   string // 密保答案
+	db.BaseModel
+}
 
 // BlacklistModel 黑名单用户
 type BlacklistModel struct {
@@ -333,20 +374,22 @@ type Model struct {
 	ShockOn           int    //震动0.否1.是
 	OfflineProtection int    // 离线保护
 	Version           int64
-	Status            int    // 状态 0.禁用 1.启用
-	Vercode           string //验证码
-	QRVercode         string // 二维码验证码
-	IsUploadAvatar    int    // 是否上传过头像0:未上传1:已上传
-	Role              string // 角色 admin/superAdmin
-	Robot             int    // 机器人0.否1.是
-	MuteOfApp         int    // app是否禁音（当pc登录的时候app可以设置禁音，当pc登录后有效）
-	IsDestroy         int    // 是否已注销0.否1.是
-	WXOpenid          string // 微信openid
-	WXUnionid         string // 微信unionid
-	GiteeUID          string // gitee uid
-	GithubUID         string // github uid
-	Web3PublicKey     string // web3公钥
-	MsgExpireSecond   int64  // 消息过期时长
+	Status            int        // 状态 0.禁用 1.启用
+	Vercode           string     //验证码
+	QRVercode         string     // 二维码验证码
+	IsUploadAvatar    int        // 是否上传过头像0:未上传1:已上传
+	Role              string     // 角色 admin/superAdmin
+	Robot             int        // 机器人0.否1.是
+	MuteOfApp         int        // app是否禁音（当pc登录的时候app可以设置禁音，当pc登录后有效）
+	IsDestroy         int        // 是否已注销0.否1.是
+	WXOpenid          string     // 微信openid
+	WXUnionid         string     // 微信unionid
+	GiteeUID          string     // gitee uid
+	GithubUID         string     // github uid
+	Web3PublicKey     string     // web3公钥
+	MsgExpireSecond   int64      // 消息过期时长
+	UpdatedAtUsername *time.Time // 用户名最后的修改时间
+	SearchByUsername  int        // 是否可以通过用户名搜索到本人
 	db.BaseModel
 }
 

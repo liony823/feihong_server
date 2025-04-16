@@ -36,7 +36,7 @@ const (
 )
 
 // Names 注册用户随机名字
-var Names = []string{"龚都", "黄祖", "黄祖", "黄皓", "黄琬", "黄歇", "黄权", "公孙瓒",
+var zhNames = []string{"龚都", "黄祖", "黄祖", "黄皓", "黄琬", "黄歇", "黄权", "公孙瓒",
 	"袁绍", "张角", "李儒", "高顺", "马腾", "文丑", "华雄", "颜良", "华佗",
 	"左慈", "貂蝉", "司马徽", "蔡文姬", "胡车儿", "逢纪", "纪灵", "张绣", "孔融", "张鲁",
 	"韩遂", "张燕", "张曼成", "审配", "黄甫嵩", "张梁", "张任", "马铁", "沪指", "辟暑大王",
@@ -53,6 +53,18 @@ var Names = []string{"龚都", "黄祖", "黄祖", "黄皓", "黄琬", "黄歇",
 	"高俅", "闻太师", "卢俊义", "吴用", "公孙胜", "关胜", "林冲", "秦明", "呼延灼", "花荣", "阮小七", "燕青",
 	"皇甫端", "扈三娘", "王英", "安道全", "金大坚", "萧峰", "段誉", "童猛", "陶宗旺", "郑天寿", "王定六", "段景住",
 	"寅将军", "黑熊精", "白衣秀士", "凌虚子", "黄风怪", "白骨精", "奎木狼", "金角大王", "银角大王",
+}
+
+var enNames = []string{
+	"John", "Jane", "Jim", "Jill", "Jack", "Mary", "Robert", "Patricia", "Michael", "Linda", "William", "Elizabeth",
+	"David", "Susan", "Richard", "Jessica", "Joseph", "Sarah", "Thomas", "Karen", "Charles", "Nancy", "Christopher",
+	"Lisa", "Daniel", "Margaret", "Matthew", "Betty", "Anthony", "Sandra", "Mark", "Ashley", "Donald", "Dorothy",
+	"Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle", "Kenneth", "Carol", "Kevin",
+	"Amanda", "Brian", "Melissa", "George", "Deborah", "Edward", "Stephanie", "Ronald", "Rebecca", "Timothy", "Laura",
+	"Jason", "Helen", "Jeffrey", "Sharon", "Ryan", "Cynthia", "Jacob", "Kathleen", "Gary", "Amy", "Nicholas", "Shirley",
+	"Eric", "Angela", "Jonathan", "Anna", "Stephen", "Ruth", "Larry", "Brenda", "Justin", "Pamela", "Scott", "Nicole",
+	"Brandon", "Katherine", "Benjamin", "Samantha", "Samuel", "Christine", "Gregory", "Emma", "Frank", "Catherine",
+	"Alexander", "Debra", "Raymond", "Virginia", "Patrick", "Rachel", "Jack", "Carolyn", "Dennis", "Janet", "Jerry",
 }
 
 const (

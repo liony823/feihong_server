@@ -8,7 +8,7 @@ appName: "飞宏IM" # 项目名称
 #messageSaveAcrossDevice: true # 消息是否跨设备保存（换设备登录消息是否还能同步到老消息）
 #welcomeMessage: "欢迎使用{{appName}}" # 欢迎消息
 #phoneSearchOff: true # 关闭手机号搜索用户功能
-#onlineStatusOn: true # 开启在线状态功能
+onlineStatusOn: true # 开启在线状态功能
 #groupUpgradeWhenMemberCount: 1000 # 群组人数达到多少人时，群组自动升级为超级群组
 #eventPoolSize: 100 # 事件池大小
 
@@ -43,7 +43,7 @@ external:
 
 ##################### 短信配置 ####################
 smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证码为该值。
-#smsProvider: "aliyun" # 短信服务商. 例如: aliyun or unisms
+smsProvider: "aliyun" # 短信服务商. 例如: aliyun or unisms
 #aliyunSMS:
 #  accessKeyID: "" # 阿里云短信accessKeyID
 #  accessSecret: "" # 阿里云短信accessSecret
@@ -134,10 +134,10 @@ avatar:
 #  partition: 100 # 头像分区数量
 
 ##################### 短号配置 ####################
-#shortNo:
-#  numOn: false # 短号是否为纯数字
-#  numLen: 7 # 短号长度
-#  editOff: false # 是否允许修改短号
+shortNo:
+  # numOn: true # 短号是否为纯数字
+  # numLen: 7 # 短号长度
+  editOff: false # 是否关闭修改短号
 
 ##################### 机器人配置 ####################
 #robot:

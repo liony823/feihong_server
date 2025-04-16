@@ -859,38 +859,39 @@ type UserDetailResp struct {
 	UID                 string            `json:"uid"`
 	Name                string            `json:"name"`
 	Username            string            `json:"username"`
-	Email               string            `json:"email,omitempty"`        // email（仅自己能看）
-	Zone                string            `json:"zone,omitempty"`         // 手机区号（仅自己能看）
-	Phone               string            `json:"phone,omitempty"`        // 手机号（仅自己能看）
-	Mute                int               `json:"mute"`                   // 免打扰
-	Top                 int               `json:"top"`                    // 置顶
-	Sex                 int               `json:"sex"`                    //性别1:男
-	Category            string            `json:"category"`               //用户分类 '客服'
-	ShortNo             string            `json:"short_no"`               // 用户唯一短编号
-	ChatPwdOn           int               `json:"chat_pwd_on"`            //是否开启聊天密码
-	Screenshot          int               `json:"screenshot"`             //截屏通知
-	RevokeRemind        int               `json:"revoke_remind"`          //撤回提醒
-	Receipt             int               `json:"receipt"`                //消息是否回执
-	Online              int               `json:"online"`                 //是否在线
-	LastOffline         int               `json:"last_offline"`           //最后一次离线时间
-	DeviceFlag          config.DeviceFlag `json:"device_flag"`            // 在线设备标记
-	Follow              int               `json:"follow"`                 //是否是好友
-	BeDeleted           int               `json:"be_deleted"`             // 被删除
-	BeBlacklist         int               `json:"be_blacklist"`           // 被拉黑
-	Code                string            `json:"code"`                   //加好友所需vercode TODO: code不再使用 请使用Vercode
-	Vercode             string            `json:"vercode"`                //
-	SourceDesc          string            `json:"source_desc"`            // 好友来源
-	Remark              string            `json:"remark"`                 //好友备注
-	IsUploadAvatar      int               `json:"is_upload_avatar"`       // 是否上传头像
-	Status              int               `json:"status"`                 //用户状态 1 正常 2:黑名单
-	Robot               int               `json:"robot"`                  // 机器人0.否1.是
-	IsDestroy           int               `json:"is_destroy"`             // 是否注销0.否1.是
-	Flame               int               `json:"flame"`                  // 是否开启阅后即焚
-	FlameSecond         int               `json:"flame_second"`           // 阅后即焚秒数
-	JoinGroupInviteUID  string            `json:"join_group_invite_uid"`  // 加入群聊邀请人UID
-	JoinGroupInviteName string            `json:"join_group_invite_name"` // 加入群聊邀请人名称
-	JoinGroupTime       string            `json:"join_group_time"`        // 加入群聊时间
-	GroupMember         *GroupMemberResp  `json:"group_member,omitempty"` // 群成员信息
+	Email               string            `json:"email,omitempty"`               // email（仅自己能看）
+	Zone                string            `json:"zone,omitempty"`                // 手机区号（仅自己能看）
+	Phone               string            `json:"phone,omitempty"`               // 手机号（仅自己能看）
+	Mute                int               `json:"mute"`                          // 免打扰
+	Top                 int               `json:"top"`                           // 置顶
+	Sex                 int               `json:"sex"`                           //性别1:男
+	Category            string            `json:"category"`                      //用户分类 '客服'
+	ShortNo             string            `json:"short_no"`                      // 用户唯一短编号
+	ChatPwdOn           int               `json:"chat_pwd_on"`                   //是否开启聊天密码
+	Screenshot          int               `json:"screenshot"`                    //截屏通知
+	RevokeRemind        int               `json:"revoke_remind"`                 //撤回提醒
+	Receipt             int               `json:"receipt"`                       //消息是否回执
+	Online              int               `json:"online"`                        //是否在线
+	LastOffline         int               `json:"last_offline"`                  //最后一次离线时间
+	UpdatedAtUsername   string            `json:"updated_at_username,omitempty"` // 用户名最后的修改时间
+	DeviceFlag          config.DeviceFlag `json:"device_flag"`                   // 在线设备标记
+	Follow              int               `json:"follow"`                        //是否是好友
+	BeDeleted           int               `json:"be_deleted"`                    // 被删除
+	BeBlacklist         int               `json:"be_blacklist"`                  // 被拉黑
+	Code                string            `json:"code"`                          //加好友所需vercode TODO: code不再使用 请使用Vercode
+	Vercode             string            `json:"vercode"`                       //
+	SourceDesc          string            `json:"source_desc"`                   // 好友来源
+	Remark              string            `json:"remark"`                        //好友备注
+	IsUploadAvatar      int               `json:"is_upload_avatar"`              // 是否上传头像
+	Status              int               `json:"status"`                        //用户状态 1 正常 2:黑名单
+	Robot               int               `json:"robot"`                         // 机器人0.否1.是
+	IsDestroy           int               `json:"is_destroy"`                    // 是否注销0.否1.是
+	Flame               int               `json:"flame"`                         // 是否开启阅后即焚
+	FlameSecond         int               `json:"flame_second"`                  // 阅后即焚秒数
+	JoinGroupInviteUID  string            `json:"join_group_invite_uid"`         // 加入群聊邀请人UID
+	JoinGroupInviteName string            `json:"join_group_invite_name"`        // 加入群聊邀请人名称
+	JoinGroupTime       string            `json:"join_group_time"`               // 加入群聊时间
+	GroupMember         *GroupMemberResp  `json:"group_member,omitempty"`        // 群成员信息
 }
 
 type GroupMemberResp struct {
@@ -916,13 +917,15 @@ func NewUserDetailResp(m *Detail, remark, loginUID string, sourceFrom string, on
 	phone := ""
 	zone := ""
 	username := ""
+	updatedAtUsername := ""
 	if self {
 		email = m.Email
 		phone = m.Phone
 		zone = m.Zone
-	}
-	if m.Robot == 1 {
 		username = m.Username
+	}
+	if m.UpdatedAtUsername != nil {
+		updatedAtUsername = m.UpdatedAtUsername.String()
 	}
 	var flame int
 	var flameSecond int
@@ -933,35 +936,36 @@ func NewUserDetailResp(m *Detail, remark, loginUID string, sourceFrom string, on
 	}
 
 	return &UserDetailResp{
-		UID:            m.UID,
-		Name:           m.Name,
-		Email:          email,
-		Zone:           zone,
-		Phone:          phone,
-		Mute:           m.Mute,
-		Top:            m.Top,
-		Sex:            m.Sex,
-		ChatPwdOn:      m.ChatPwdOn,
-		Category:       m.Category,
-		ShortNo:        m.ShortNo,
-		Screenshot:     m.Screenshot,
-		RevokeRemind:   m.RevokeRemind,
-		Receipt:        m.Receipt,
-		Online:         onLine,
-		LastOffline:    lastOffline,
-		DeviceFlag:     deviceFlag,
-		Follow:         follow,
-		SourceDesc:     sourceFrom,
-		Remark:         remark,
-		IsUploadAvatar: m.IsUploadAvatar,
-		Status:         status,
-		Robot:          m.Robot,
-		Username:       username,
-		BeDeleted:      beDeleted,
-		BeBlacklist:    beBlacklist,
-		IsDestroy:      m.IsDestroy,
-		Flame:          flame,
-		FlameSecond:    flameSecond,
-		Vercode:        vercode,
+		UID:               m.UID,
+		Name:              m.Name,
+		Email:             email,
+		Zone:              zone,
+		Phone:             phone,
+		Mute:              m.Mute,
+		Top:               m.Top,
+		Sex:               m.Sex,
+		ChatPwdOn:         m.ChatPwdOn,
+		Category:          m.Category,
+		ShortNo:           m.ShortNo,
+		Screenshot:        m.Screenshot,
+		RevokeRemind:      m.RevokeRemind,
+		Receipt:           m.Receipt,
+		Online:            onLine,
+		LastOffline:       lastOffline,
+		UpdatedAtUsername: updatedAtUsername,
+		DeviceFlag:        deviceFlag,
+		Follow:            follow,
+		SourceDesc:        sourceFrom,
+		Remark:            remark,
+		IsUploadAvatar:    m.IsUploadAvatar,
+		Status:            status,
+		Robot:             m.Robot,
+		Username:          username,
+		BeDeleted:         beDeleted,
+		BeBlacklist:       beBlacklist,
+		IsDestroy:         m.IsDestroy,
+		Flame:             flame,
+		FlameSecond:       flameSecond,
+		Vercode:           vercode,
 	}
 }

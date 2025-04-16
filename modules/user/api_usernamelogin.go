@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/model"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
@@ -22,25 +24,46 @@ import (
 // 通过用户名注册
 func (u *User) usernameRegister(c *wkhttp.Context) {
 	if !u.ctx.GetConfig().Register.UsernameOn {
-		c.ResponseError(errors.New("暂不支持用户名注册"))
+		c.ResponseError(errors.New(common.ErrUsernameRegisterOff))
 		return
 	}
 	var req usernameRegisterReq
 	if err := c.BindJSON(&req); err != nil {
-		c.ResponseError(errors.New("请求数据格式有误！"))
+		c.ResponseError(errors.New(common.ErrRequestDataError))
 		return
 	}
 	if req.Username == "" {
-		c.ResponseError(errors.New("用户名不能为空"))
+		c.ResponseError(errors.New(common.ErrUsernameEmpty))
 		return
 	}
 	if strings.TrimSpace(req.Password) == "" {
-		c.Response(errors.New("密码不能为空！"))
+		c.Response(errors.New(common.ErrPasswordEmpty))
 		return
 	}
 	if len(req.Username) < 6 || len(req.Username) > 18 {
-		c.ResponseError(errors.New("用户名必须在6-18位"))
+		c.ResponseError(errors.New(common.ErrUsernameNotInvalid))
 		return
+	}
+
+	isLetter := true
+	for index, r := range req.Username {
+		if !unicode.IsLetter(r) && index == 0 {
+			isLetter = false
+			break
+		}
+		if unicode.Is(unicode.Han, r) {
+			isLetter = false
+			break
+		}
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '_' {
+			isLetter = false
+			break
+		}
+
+		if !isLetter {
+			c.ResponseError(errors.New(common.ErrUsernameNotInvalid))
+			return
+		}
 	}
 	appConfig, err := u.commonService.GetAppConfig()
 	if err != nil {
@@ -55,7 +78,7 @@ func (u *User) usernameRegister(c *wkhttp.Context) {
 	var invite *model.Invite
 	if registerInviteOn == 1 {
 		if req.InviteCode == "" {
-			c.ResponseError(errors.New("邀请码不能为空"))
+			c.ResponseError(errors.New(common.ErrInviteCodeEmpty))
 			return
 		}
 		var inviteCodeIsExist = false
@@ -70,7 +93,7 @@ func (u *User) usernameRegister(c *wkhttp.Context) {
 			}
 		}
 		if !inviteCodeIsExist {
-			c.ResponseError(errors.New("邀请码不存在"))
+			c.ResponseError(errors.New(common.ErrInviteCodeNotExist))
 			return
 		}
 	}
@@ -82,7 +105,7 @@ func (u *User) usernameRegister(c *wkhttp.Context) {
 		return
 	}
 	if userInfo != nil {
-		c.ResponseError(errors.New("该用户名已存在"))
+		c.ResponseError(errors.New(common.ErrUsernameExist))
 		return
 	}
 	// 通过用户名注册
@@ -93,15 +116,15 @@ func (u *User) usernameRegister(c *wkhttp.Context) {
 func (u *User) usernameLogin(c *wkhttp.Context) {
 	var req loginReq
 	if err := c.BindJSON(&req); err != nil {
-		c.ResponseError(errors.New("请求数据格式有误！"))
+		c.ResponseError(errors.New(common.ErrRequestDataError))
 		return
 	}
 	if err := req.Check(); err != nil {
 		c.ResponseError(err)
 		return
 	}
-	if len(req.Username) < 8 || len(req.Username) > 22 {
-		c.ResponseError(errors.New("用户名必须在8-22位"))
+	if len(req.Username) < 6 || len(req.Username) > 18 {
+		c.ResponseError(errors.New(common.ErrUsernameNotInvalid))
 		return
 	}
 	loginSpan := u.ctx.Tracer().StartSpan(
@@ -119,12 +142,12 @@ func (u *User) usernameLogin(c *wkhttp.Context) {
 		return
 	}
 	if userInfo == nil {
-		c.ResponseError(errors.New("该用户名不存在"))
+		c.ResponseError(errors.New(common.ErrUsernameNotExist))
 		return
 	}
 
 	if util.MD5(util.MD5(req.Password)) != userInfo.Password {
-		c.ResponseError(errors.New("密码不正确！"))
+		c.ResponseError(errors.New(common.ErrPasswordIncorrect))
 		return
 	}
 
@@ -169,7 +192,7 @@ func (u *User) registerWithUsername(username string, name string, password strin
 	tx, err := u.db.session.Begin()
 	if err != nil {
 		u.Error("创建事务失败！", zap.Error(err))
-		c.ResponseError(errors.New("创建事务失败！"))
+		c.ResponseError(errors.New(common.ErrCreateTransactionFailed))
 		return
 	}
 	defer func() {
@@ -184,14 +207,14 @@ func (u *User) registerWithUsername(username string, name string, password strin
 		if err != nil {
 			tx.Rollback()
 			u.Error("数据库事务提交失败", zap.Error(err))
-			c.ResponseError(errors.New("数据库事务提交失败"))
+			c.ResponseError(errors.New(common.ErrDBTransactionCommitFailed))
 			return nil
 		}
 		return nil
 	})
 	if err != nil {
 		tx.Rollback()
-		c.ResponseError(errors.New("注册失败！"))
+		c.ResponseError(errors.New(common.ErrRegisterFailed))
 		return
 	}
 	c.Response(map[string]interface{}{
@@ -210,23 +233,23 @@ func (u *User) resetPwdWithWeb3PublicKey(c *wkhttp.Context) {
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
-		c.ResponseError(errors.New("请求数据格式有误！"))
+		c.ResponseError(errors.New(common.ErrRequestDataError))
 		return
 	}
 	if req.Username == "" {
-		c.ResponseError(errors.New("用户名不能为空"))
+		c.ResponseError(errors.New(common.ErrDataFormatError))
 		return
 	}
 	if req.Password == "" {
-		c.ResponseError(errors.New("密码不能为空"))
+		c.ResponseError(errors.New(common.ErrDataFormatError))
 		return
 	}
 	if req.VerifyText == "" {
-		c.ResponseError(errors.New("校验字符不能为空"))
+		c.ResponseError(errors.New(common.ErrVerifyCharEmpty))
 		return
 	}
 	if req.SignText == "" {
-		c.ResponseError(errors.New("签名字符不能为空"))
+		c.ResponseError(errors.New(common.ErrSignatureEmpty))
 		return
 	}
 	user, err := u.db.QueryByUsername(req.Username)
@@ -236,11 +259,11 @@ func (u *User) resetPwdWithWeb3PublicKey(c *wkhttp.Context) {
 		return
 	}
 	if user == nil {
-		c.ResponseError(errors.New("该用户不存在"))
+		c.ResponseError(errors.New(common.ErrUserNotExist))
 		return
 	}
 	if user.Web3PublicKey == "" {
-		c.ResponseError(errors.New("该用户未上传公钥"))
+		c.ResponseError(errors.New(common.ErrUserNoPublicKey))
 		return
 	}
 	// 判断签名明文是否存在
@@ -252,17 +275,17 @@ func (u *User) resetPwdWithWeb3PublicKey(c *wkhttp.Context) {
 		return
 	}
 	if verifyText == "" || req.VerifyText != verifyText {
-		c.ResponseError(errors.New("签名信息不存在"))
+		c.ResponseError(errors.New(common.ErrSignatureInfoNotExist))
 		return
 	}
 
 	verify, err := u.verifySignature(user.Web3PublicKey, req.VerifyText, req.SignText)
 	if err != nil {
-		c.ResponseError(errors.New("校验签名错误"))
+		c.ResponseError(errors.New(common.ErrVerifySignatureError))
 		return
 	}
 	if !verify {
-		c.ResponseError(errors.New("签名错误"))
+		c.ResponseError(errors.New(common.ErrSignatureError))
 		return
 	}
 
@@ -314,12 +337,12 @@ func (u *User) uploadWeb3PublicKey(c *wkhttp.Context) {
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
-		c.ResponseError(errors.New("请求数据格式有误！"))
+		c.ResponseError(errors.New(common.ErrRequestDataError))
 		return
 	}
 
 	if req.Web3PublicKey == "" {
-		c.ResponseError(errors.New("公钥不能为空"))
+		c.ResponseError(errors.New(common.ErrPublicKeyEmpty))
 		return
 	}
 	userInfo, err := u.db.QueryByUID(loginUID)
@@ -329,11 +352,11 @@ func (u *User) uploadWeb3PublicKey(c *wkhttp.Context) {
 		return
 	}
 	if userInfo == nil || userInfo.Status == 0 || userInfo.IsDestroy == 1 {
-		c.ResponseError(errors.New("该用户不存在或被封禁"))
+		c.ResponseError(errors.New(common.ErrUserDisabledOrBanned))
 		return
 	}
 	if userInfo.Web3PublicKey != "" {
-		c.ResponseError(errors.New("该用户已上传过公钥信息"))
+		c.ResponseError(errors.New(common.ErrUserAlreadyUploadPublicKey))
 		return
 	}
 
@@ -358,23 +381,23 @@ func (u *User) web3verifySignature(c *wkhttp.Context) {
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
-		c.ResponseError(errors.New("请求数据格式有误！"))
+		c.ResponseError(errors.New(common.ErrRequestDataError))
 		return
 	}
 	if req.Username == "" {
-		c.ResponseError(errors.New("用户名不能为空"))
+		c.ResponseError(errors.New(common.ErrDataFormatError))
 		return
 	}
 	if req.VerifyText == "" {
-		c.ResponseError(errors.New("校验字符不能为空"))
+		c.ResponseError(errors.New(common.ErrVerifyCharEmpty))
 		return
 	}
 	if req.SignText == "" {
-		c.ResponseError(errors.New("签名字符不能为空"))
+		c.ResponseError(errors.New(common.ErrSignatureEmpty))
 		return
 	}
 	if req.Type == "" || (req.Type != Web3VerifyLogin && req.Type != Web3VerifyPassword) {
-		c.ResponseError(errors.New("验证类型不匹配"))
+		c.ResponseError(errors.New(common.ErrVerifyTypeNotMatch))
 		return
 	}
 
@@ -385,11 +408,11 @@ func (u *User) web3verifySignature(c *wkhttp.Context) {
 		return
 	}
 	if user == nil {
-		c.ResponseError(errors.New("该用户不存在"))
+		c.ResponseError(errors.New(common.ErrUserNotExist))
 		return
 	}
 	if user.Web3PublicKey == "" {
-		c.ResponseError(errors.New("该用户未上传公钥"))
+		c.ResponseError(errors.New(common.ErrUserNoPublicKey))
 		return
 	}
 	// 判断签名明文是否存在
@@ -401,17 +424,17 @@ func (u *User) web3verifySignature(c *wkhttp.Context) {
 		return
 	}
 	if verifyText == "" || req.VerifyText != verifyText {
-		c.ResponseError(errors.New("签名信息不存在"))
+		c.ResponseError(errors.New(common.ErrSignatureInfoNotExist))
 		return
 	}
 
 	verify, err := u.verifySignature(user.Web3PublicKey, req.VerifyText, req.SignText)
 	if err != nil {
-		c.ResponseError(errors.New("校验签名错误"))
+		c.ResponseError(errors.New(common.ErrVerifySignatureError))
 		return
 	}
 	if !verify {
-		c.ResponseError(errors.New("签名错误"))
+		c.ResponseError(errors.New(common.ErrSignatureError))
 		return
 	}
 	err = u.ctx.GetRedisConn().Del(cacheKey)
@@ -426,11 +449,11 @@ func (u *User) getVerifyText(c *wkhttp.Context) {
 	username := c.Query("username")
 	verifyType := c.Query("type")
 	if username == "" {
-		c.ResponseError(errors.New("用户名不能为空"))
+		c.ResponseError(errors.New(common.ErrDataFormatError))
 		return
 	}
 	if verifyType == "" || (verifyType != Web3VerifyLogin && verifyType != Web3VerifyPassword) {
-		c.ResponseError(errors.New("验证类型不匹配"))
+		c.ResponseError(errors.New(common.ErrVerifyTypeNotMatch))
 		return
 	}
 	user, err := u.db.QueryByUsername(username)
@@ -440,11 +463,11 @@ func (u *User) getVerifyText(c *wkhttp.Context) {
 		return
 	}
 	if user == nil || user.IsDestroy == 1 || user.Status == 0 {
-		c.ResponseError(errors.New("该用户不存在或被禁用"))
+		c.ResponseError(errors.New(common.ErrUserDisabledOrBanned))
 		return
 	}
 	if user.Web3PublicKey == "" {
-		c.ResponseError(errors.New("该用户尚未上传公钥"))
+		c.ResponseError(errors.New(common.ErrUserNoPublicKey))
 		return
 	}
 	randomStr := util.GetRandomString(20)
@@ -473,36 +496,36 @@ func (u *User) updatePwd(c *wkhttp.Context) {
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
-		c.ResponseError(errors.New("请求数据格式有误！"))
+		c.ResponseError(errors.New(common.ErrRequestDataError))
 		return
 	}
 	if req.Password == "" || req.NewPassword == "" {
-		c.ResponseError(errors.New("密码不能为空"))
+		c.ResponseError(errors.New(common.ErrDataFormatError))
 		return
 	}
 	if req.Password == req.NewPassword {
-		c.ResponseError(errors.New("新密码不能和旧密码相同"))
+		c.ResponseError(errors.New(common.ErrNewPasswordSameAsOld))
 		return
 	}
 	userInfo, err := u.db.QueryByUID(loginUID)
 	if err != nil {
 		u.Error("查询用户资料错误", zap.Error(err))
-		c.ResponseError(errors.New("查询用户资料错误"))
+		c.ResponseError(errors.New(common.ErrQueryUserInfoFailed))
 		return
 	}
 	if userInfo == nil {
-		c.ResponseError(errors.New("该用户不存在"))
+		c.ResponseError(errors.New(common.ErrUserNotExist))
 		return
 	}
 	oldPwd := util.MD5(util.MD5(req.Password))
 	if oldPwd != userInfo.Password {
-		c.ResponseError(errors.New("旧密码错误"))
+		c.ResponseError(errors.New(common.ErrOldPasswordIncorrect))
 		return
 	}
 	err = u.db.UpdateUsersWithField("password", util.MD5(util.MD5(req.NewPassword)), userInfo.UID)
 	if err != nil {
 		u.Error("修改登录密码错误", zap.Error(err))
-		c.ResponseError(errors.New("修改登录密码错误"))
+		c.ResponseError(errors.New(common.ErrUpdateLoginPasswordFailed))
 		return
 	}
 	c.ResponseOK()

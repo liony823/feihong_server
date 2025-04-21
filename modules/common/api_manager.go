@@ -515,8 +515,6 @@ func (m *Manager) sysMenuModelToManagerMenu(menu *sysMenuModel) *managerMenu {
 		Key:          menu.Key,
 		Path:         menu.Path,
 		Name:         menu.Name,
-		Desc:         menu.Desc,
-		Status:       menu.Status,
 		Icon:         menu.Icon,
 		Sort:         menu.Sort,
 		ParentKey:    menu.ParentKey,
@@ -540,8 +538,6 @@ func (m *Manager) addMenu(c *wkhttp.Context) {
 		Key          string `json:"key"`
 		Path         string `json:"path"`
 		Name         string `json:"name"`
-		Desc         string `json:"desc"`
-		Status       int    `json:"status"`
 		Icon         string `json:"icon"`
 		Sort         int    `json:"sort"`
 		ParentKey    string `json:"parent_key"`
@@ -556,11 +552,16 @@ func (m *Manager) addMenu(c *wkhttp.Context) {
 		return
 	}
 	id, err := m.db.insertSysMenu(&sysMenuModel{
-		Key:    req.Key,
-		Path:   req.Path,
-		Name:   req.Name,
-		Desc:   req.Desc,
-		Status: req.Status,
+		Key:          req.Key,
+		Path:         req.Path,
+		Name:         req.Name,
+		Icon:         req.Icon,
+		Sort:         req.Sort,
+		ParentKey:    req.ParentKey,
+		Layout:       req.Layout,
+		HiddenInMenu: req.HiddenInMenu,
+		Redirect:     req.Redirect,
+		Component:    req.Component,
 	})
 	if err != nil {
 		m.Error("新增菜单失败", zap.Error(err))
@@ -583,8 +584,6 @@ func (m *Manager) updateMenu(c *wkhttp.Context) {
 		Key          string `json:"key"`
 		Path         string `json:"path"`
 		Name         string `json:"name"`
-		Desc         string `json:"desc"`
-		Status       int    `json:"status"`
 		Icon         string `json:"icon"`
 		Sort         int    `json:"sort"`
 		ParentKey    string `json:"parent_key"`
@@ -603,8 +602,6 @@ func (m *Manager) updateMenu(c *wkhttp.Context) {
 		Key:          req.Key,
 		Path:         req.Path,
 		Name:         req.Name,
-		Desc:         req.Desc,
-		Status:       req.Status,
 		Icon:         req.Icon,
 		Sort:         req.Sort,
 		ParentKey:    req.ParentKey,
@@ -839,8 +836,6 @@ type managerMenu struct {
 	Key          string `json:"key"`
 	Path         string `json:"path"`
 	Name         string `json:"name"`
-	Desc         string `json:"desc"`
-	Status       int    `json:"status"`
 	Icon         string `json:"icon"`
 	Sort         int    `json:"sort"`
 	ParentKey    string `json:"parent_key"`

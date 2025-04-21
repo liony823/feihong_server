@@ -24,7 +24,7 @@ basicAuth:
 
 ##################### db ####################
 db:
- mysqlAddr: "root:demo@tcp(127.0.0.1:3306)/test2?charset=utf8mb4&parseTime=true" # mysql连接地址
+ mysqlAddr: "root:demo@tcp(127.0.0.1:3306)/test3?charset=utf8mb4&parseTime=true" # mysql连接地址
 #  redisAddr: "" # redis地址
 #  redisPass: "" # redis密码
 #  asynctaskRedisAddr: "" # 异步任务的redis地址 不写默认为RedisAddr的地址

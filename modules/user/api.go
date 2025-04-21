@@ -133,7 +133,7 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		user.POST("/device_badge", u.registerUserDeviceBadge)      // 上传设备红点数量
 		user.GET("/grant_login", u.grantLogin)                     // 授权登录
 		user.PUT("/current", u.userUpdateWithField)                //修改用户信息
-		user.GET("/security/question", u.getSecurityQuestion)     // 获取密保问题
+		user.GET("/security/question", u.getSecurityQuestion)      // 获取密保问题
 		user.POST("/security/question", u.addSecurityQuestion)     // 添加密保问题
 		user.PUT("/security/question", u.updateSecurityQuestion)   // 修改密保问题
 		user.GET("/qrcode", u.qrcodeMy)                            // 我的二维码
@@ -171,7 +171,7 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 	{
 
 		v.POST("/user/register", u.register)                 //用户注册
-		v.POST("/user/login", u.login)                       // 用户登录
+		v.POST("/user/phonelogin", u.phoneLogin)             // 用户登录
 		v.POST("/user/usernamelogin", u.usernameLogin)       // 用户名登录
 		v.POST("/user/usernameregister", u.usernameRegister) // 用户名注册
 
@@ -180,11 +180,12 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		v.POST("/user/web3verifysign", u.web3verifySignature)       // 验证签名
 		//v.POST("user/wxlogin", u.wxLogin)
 		v.POST("/user/sms/forgetpwd", u.getForgetPwdSMS) //获取忘记密码验证码
-		v.POST("/user/pwdforget", u.pwdforget)           //重置登录密码
-		v.GET("/user/search", u.search)                  // 搜索用户
-		v.GET("/users/:uid/avatar", u.UserAvatar)        // 用户头像
-		v.GET("/users/:uid/im", u.userIM)                // 获取用户所在IM节点信息
-		v.GET("/user/loginuuid", u.getLoginUUID)         // 获取扫描用的登录uuid
+		v.POST("user/pwdforgetByquestion", u.pwdforgetByQuestion)
+		v.POST("/user/pwdforget", u.pwdforget)    //重置登录密码
+		v.GET("/user/search", u.search)           // 搜索用户
+		v.GET("/users/:uid/avatar", u.UserAvatar) // 用户头像
+		v.GET("/users/:uid/im", u.userIM)         // 获取用户所在IM节点信息
+		v.GET("/user/loginuuid", u.getLoginUUID)  // 获取扫描用的登录uuid
 		v.GET("/user/loginstatus", u.getloginStatus)
 		v.POST("/user/sms/registercode", u.sendRegisterCode)             //获取注册短信验证码
 		v.POST("/user/login_authcode/:auth_code", u.loginWithAuthCode)   // 通过认证码登录
@@ -521,17 +522,17 @@ func (u *User) userUpdateWithField(c *wkhttp.Context) {
 	var reqMap map[string]interface{}
 	if err := c.BindJSON(&reqMap); err != nil {
 		u.Error("数据格式有误！", zap.Error(err))
-		c.ResponseError(errors.New("数据格式有误！"))
+		c.ResponseError(errors.New(common.ErrDataFormatError))
 		return
 	}
 	// 查询用户信息
 	users, err := u.db.QueryByUID(loginUID)
 	if err != nil {
-		c.ResponseError(errors.New("查询用户信息出错！"))
+		c.ResponseError(errors.New(common.ErrQueryUserInfoFailed))
 		return
 	}
 	if users == nil {
-		c.ResponseError(errors.New("用户信息不存在！"))
+		c.ResponseError(errors.New(common.ErrUserNotExist))
 		return
 	}
 
@@ -714,6 +715,10 @@ func (u *User) userUpdateWithField(c *wkhttp.Context) {
 		//修改用户信息
 		if key == "name" && value != nil && value.(string) == "" { // 修改名字
 			c.ResponseError(errors.New(common.ErrNicknameEmpty))
+			return
+		}
+		if key == "introduction" && value != nil && len(fmt.Sprintf("%s", value)) > 200 { // 修改个人介绍
+			c.ResponseError(errors.New(common.ErrIntroductionTooLong))
 			return
 		}
 
@@ -1033,9 +1038,9 @@ func (u *User) wxLogin(c *wkhttp.Context) {
 }
 
 // 登录
-func (u *User) login(c *wkhttp.Context) {
+func (u *User) phoneLogin(c *wkhttp.Context) {
 
-	var req loginReq
+	var req phoneLoginReq
 	if err := c.BindJSON(&req); err != nil {
 		c.ResponseError(errors.New("请求数据格式有误！"))
 		return
@@ -1049,25 +1054,25 @@ func (u *User) login(c *wkhttp.Context) {
 		opentracing.ChildOf(c.GetSpanContext()),
 	)
 	loginSpanCtx := u.ctx.Tracer().ContextWithSpan(context.Background(), loginSpan)
-	loginSpan.SetTag("username", req.Username)
+	loginSpan.SetTag("phonenumber", req.Phone)
 	defer loginSpan.Finish()
 
-	userInfo, err := u.db.QueryByUsernameCxt(loginSpanCtx, req.Username)
+	userInfo, err := u.db.QueryByPhoneCxt(loginSpanCtx, req.Zone, req.Phone)
 	if err != nil {
-		u.Error("查询用户信息失败！", zap.String("username", req.Username))
+		u.Error("查询用户信息失败！", zap.String("phonenumber", req.Phone))
 		c.ResponseError(err)
 		return
 	}
 	if userInfo == nil || userInfo.IsDestroy == 1 {
-		c.ResponseError(errors.New("用户不存在"))
+		c.ResponseError(errors.New(common.ErrUserNotExist))
 		return
 	}
 	if userInfo.Password == "" {
-		c.ResponseError(errors.New("此账号不允许登录"))
+		c.ResponseError(errors.New(common.ErrUserNotAllowLogin))
 		return
 	}
 	if util.MD5(util.MD5(req.Password)) != userInfo.Password {
-		c.ResponseError(errors.New("密码不正确！"))
+		c.ResponseError(errors.New(common.ErrPasswordIncorrect))
 		return
 	}
 	u.execLoginAndRespose(userInfo, config.DeviceFlag(req.Flag), req.Device, loginSpanCtx, c)
@@ -1362,7 +1367,7 @@ func (u *User) search(c *wkhttp.Context) {
 	useModel, err := u.db.QueryByKeyword(keyword)
 	if err != nil {
 		u.Error("查询用户信息失败！", zap.Error(err), zap.String("keyword", keyword))
-		c.ResponseError(errors.New("查询用户信息失败！"))
+		c.ResponseError(errors.New(common.ErrQueryUserInfoFailed))
 		return
 	}
 	if useModel == nil {
@@ -1392,6 +1397,17 @@ func (u *User) search(c *wkhttp.Context) {
 			return
 		}
 	}
+
+	if useModel.SearchByUsername == 0 {
+		//关闭了用户名搜索
+		if strings.EqualFold(keyword, useModel.Name) {
+			c.JSON(http.StatusOK, gin.H{
+				"exist": 0,
+			})
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"exist": 1,
 		"data":  newUserResp(useModel),
@@ -2471,43 +2487,85 @@ func (u *User) addSystemFriend(uid string) error {
 	return nil
 }
 
-// 重置登录密码
-func (u *User) pwdforget(c *wkhttp.Context) {
-	var req resetPwdReq
+// 通过密保问题重置登录密码
+func (u *User) pwdforgetByQuestion(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	var req pwdforgetByQuestionReq
 	if err := c.BindJSON(&req); err != nil {
 		c.ResponseError(errors.New("请求数据格式有误！"))
 		return
 	}
+	if err := req.Check(); err != nil {
+		c.ResponseError(err)
+		return
+	}
+
+	securityInfo, err := u.db.queryUserSecurity(loginUID)
+	if err != nil {
+		u.Error("查询用户密保问题错误", zap.Error(err))
+		c.ResponseError(errors.New(common.ErrSecurityQueryFailed))
+		return
+	}
+	if securityInfo == nil {
+		c.ResponseError(errors.New(common.ErrSecurityQuestionNotExist))
+		return
+	}
+	if securityInfo.Question != req.Question {
+		c.ResponseError(errors.New(common.ErrSecurityQuestionNotMatch))
+		return
+	}
+
+	if securityInfo.Answer != req.Answer {
+		c.ResponseError(errors.New(common.ErrSecurityAnswerNotMatch))
+		return
+	}
+
+	err = u.db.UpdateUsersWithField("password", util.MD5(util.MD5(req.Password)), loginUID)
+	if err != nil {
+		u.Error("更新用户密码错误", zap.Error(err))
+		c.ResponseError(errors.New(common.ErrUpdateLoginPasswordFailed))
+		return
+	}
+	c.ResponseOK()
+}
+
+// 重置登录密码
+func (u *User) pwdforget(c *wkhttp.Context) {
+	var req resetPwdReq
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New(common.ErrRequestDataError))
+		return
+	}
 	if strings.TrimSpace(req.Zone) == "" {
-		c.ResponseError(errors.New("区号不能为空！"))
+		c.ResponseError(errors.New(common.ErrZoneEmpty))
 		return
 	}
 	if strings.TrimSpace(req.Phone) == "" {
-		c.ResponseError(errors.New("手机号不能为空！"))
+		c.ResponseError(errors.New(common.ErrPhoneNumberEmpty))
 		return
 	}
 	if strings.TrimSpace(req.Code) == "" {
-		c.ResponseError(errors.New("验证码不能为空！"))
+		c.ResponseError(errors.New(common.ErrVerificationCodeEmpty))
 		return
 	}
 	if strings.TrimSpace(req.Pwd) == "" {
-		c.ResponseError(errors.New("密码不能为空！"))
+		c.ResponseError(errors.New(common.ErrPasswordEmpty))
 		return
 	}
 	userInfo, err := u.db.QueryByPhone(req.Zone, req.Phone)
 	if err != nil {
 		u.Error("查询用户信息错误", zap.Error(err))
-		c.ResponseError(errors.New("查询用户信息错误"))
+		c.ResponseError(errors.New(common.ErrQueryUserInfoFailed))
 		return
 	}
 	if userInfo == nil {
-		c.ResponseError(errors.New("该账号不存在"))
+		c.ResponseError(errors.New(common.ErrUserNotExist))
 		return
 	}
 	//测试模式
 	if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != "" {
 		if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != req.Code {
-			c.ResponseError(errors.New("验证码错误"))
+			c.ResponseError(errors.New(common.ErrVerificationCodeIncorrect))
 			return
 		}
 	} else {
@@ -2522,7 +2580,7 @@ func (u *User) pwdforget(c *wkhttp.Context) {
 	err = u.db.UpdateUsersWithField("password", util.MD5(util.MD5(req.Pwd)), userInfo.UID)
 	if err != nil {
 		u.Error("修改登录密码错误", zap.Error(err))
-		c.ResponseError(errors.New("修改登录密码错误"))
+		c.ResponseError(errors.New(common.ErrUpdateLoginPasswordFailed))
 		return
 	}
 	c.ResponseOK()
@@ -2572,7 +2630,7 @@ func (u *User) getForgetPwdSMS(c *wkhttp.Context) {
 
 // 是否允许更新
 func allowUpdateUserField(field string) bool {
-	allowfields := []string{"sex", "short_no", "username", "name", "search_by_phone", "search_by_short", "new_msg_notice", "msg_show_detail", "voice_on", "shock_on", "msg_expire_second"}
+	allowfields := []string{"sex", "introduction", "short_no", "username", "name", "search_by_phone", "search_by_short", "new_msg_notice", "msg_show_detail", "voice_on", "shock_on", "msg_expire_second"}
 	for _, allowFiled := range allowfields {
 		if field == allowFiled {
 			return true
@@ -2795,6 +2853,30 @@ type resetPwdReq struct {
 	Code  string `json:"code"`  //验证码
 	Pwd   string `json:"pwd"`   //密码
 }
+
+// 通过密保问题重置登录密码
+type pwdforgetByQuestionReq struct {
+	Answer   string `json:"answer"`   //密保答案
+	Question string `json:"question"` //密保问题
+	Password string `json:"password"` //新密码
+}
+
+func (r pwdforgetByQuestionReq) Check() error {
+	if strings.TrimSpace(r.Question) == "" {
+		return errors.New(common.ErrSecurityQuestionEmpty)
+	}
+	if strings.TrimSpace(r.Answer) == "" {
+		return errors.New(common.ErrSecurityAnswerEmpty)
+	}
+	if strings.TrimSpace(r.Password) == "" {
+		return errors.New(common.ErrPasswordEmpty)
+	}
+	if len(r.Password) < 6 {
+		return errors.New(common.ErrPasswordLengthInvalid)
+	}
+	return nil
+}
+
 type customerservicesResp struct {
 	UID  string `json:"uid"`
 	Name string `json:"name"`
@@ -2812,19 +2894,19 @@ type registerReq struct {
 
 func (r registerReq) CheckRegister() error {
 	if strings.TrimSpace(r.Zone) == "" {
-		return errors.New("区号不能为空！")
+		return errors.New(common.ErrZoneEmpty)
 	}
 	if strings.TrimSpace(r.Phone) == "" {
-		return errors.New("手机号不能为空！")
+		return errors.New(common.ErrPhoneNumberEmpty)
 	}
 	if strings.TrimSpace(r.Code) == "" {
-		return errors.New("验证码不能为空！")
+		return errors.New(common.ErrVerificationCodeEmpty)
 	}
 	if strings.TrimSpace(r.Password) == "" {
-		return errors.New("密码不能为空！")
+		return errors.New(common.ErrPasswordEmpty)
 	}
 	if len(r.Password) < 6 {
-		return errors.New("密码长度必须大于6位！")
+		return errors.New(common.ErrPasswordLengthInvalid)
 	}
 	return nil
 }
@@ -2847,27 +2929,54 @@ type loginReq struct {
 	Device   *deviceReq `json:"device"` //登录设备信息
 }
 
+type phoneLoginReq struct {
+	Zone     string     `json:"zone"`
+	Phone    string     `json:"phone"`
+	Password string     `json:"password"`
+	Flag     int        `json:"flag"`   // 设备标示 0.APP 1.PC
+	Device   *deviceReq `json:"device"` //登录设备信息
+}
+
+func (r phoneLoginReq) Check() error {
+	if strings.TrimSpace(r.Zone) == "" {
+		return errors.New(common.ErrZoneEmpty)
+	}
+
+	if strings.TrimSpace(r.Phone) == "" {
+		return errors.New(common.ErrPhoneNumberEmpty)
+	}
+
+	if strings.TrimSpace(r.Password) == "" {
+		return errors.New(common.ErrPasswordEmpty)
+	}
+	return nil
+}
+
 func (r loginReq) Check() error {
 	if strings.TrimSpace(r.Username) == "" {
-		return errors.New("用户名不能为空！")
+		return errors.New(common.ErrUsernameEmpty)
 	}
 	if strings.TrimSpace(r.Password) == "" {
-		return errors.New("密码不能为空！")
+		return errors.New(common.ErrPasswordEmpty)
 	}
 	return nil
 }
 
 type userResp struct {
-	UID     string `json:"uid"`
-	Name    string `json:"name"`
-	Vercode string `json:"vercode"`
+	UID          string `json:"uid"`
+	Name         string `json:"name"`
+	Sex          int    `json:"sex"`
+	Introduction string `json:"introduction"` //个人介绍
+	Vercode      string `json:"vercode"`
 }
 
 func newUserResp(m *Model) userResp {
 	return userResp{
-		UID:     m.UID,
-		Name:    m.Name,
-		Vercode: m.Vercode,
+		UID:          m.UID,
+		Name:         m.Name,
+		Sex:          m.Sex,
+		Introduction: m.Introduction,
+		Vercode:      m.Vercode,
 	}
 }
 

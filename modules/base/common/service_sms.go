@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
 	"go.uber.org/zap"
@@ -70,6 +71,7 @@ func (s *SMSService) SendVerifyCode(ctx context.Context, zone, phone string, cod
 	if err != nil {
 		return err
 	}
+	//TODO 正是环境打开
 	// err = smsProvider.SendSMS(ctx, zone, phone, verifyCode)
 	return err
 }
@@ -89,5 +91,5 @@ func (s *SMSService) Verify(ctx context.Context, zone, phone, code string, codeT
 		return nil
 	}
 	s.Info("验证码错误:"+code+", 真code:"+sysCode+", phone:"+phone, zap.String("code", code))
-	return errors.New("验证码无效！")
+	return errors.New(common.ErrVerificationCodeIncorrect)
 }

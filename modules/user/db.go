@@ -52,6 +52,13 @@ func (d *DB) QueryByUsernameCxt(ctx context.Context, username string) (*Model, e
 	return d.QueryByUsername(username)
 }
 
+// QueryByPhoneCxt 通过手机号和区号查询用户信息
+func (d *DB) QueryByPhoneCxt(ctx context.Context, zone string, phone string) (*Model, error) {
+	span, _ := d.ctx.Tracer().StartSpanFromContext(ctx, "QueryByPhone")
+	defer span.Finish()
+	return d.QueryByPhone(zone, phone)
+}
+
 // QueryByPhone 通过手机号和区号查询用户信息
 func (d *DB) QueryByPhone(zone string, phone string) (*Model, error) {
 	var model *Model
@@ -323,7 +330,7 @@ func (d *DB) queryUserSecurity(uid string) (*UserSecurityModel, error) {
 // UserSecurityModel 用户密保
 type UserSecurityModel struct {
 	UID      string // 用户唯一id
-	Question string // 密保问题id
+	Question string // 密保问题
 	Answer   string // 密保答案
 	db.BaseModel
 }
@@ -358,6 +365,7 @@ type Model struct {
 	Password          string // 用户密码
 	Category          string //用户分类
 	Sex               int    //性别
+	Introduction      string //个人介绍
 	ShortNo           string //唯一短编号
 	ShortStatus       int    //唯一短编号是否修改0.否1.是
 	Zone              string //区号

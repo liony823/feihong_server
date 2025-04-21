@@ -246,6 +246,12 @@ func (d *friendDB) queryApplysWithPage(uid string, pageSize, page uint64) ([]*Fr
 	return list, err
 }
 
+func (d *friendDB) queryApplyCount(uid string) (int, error) {
+	var cn int
+	_, err := d.session.Select("count(*)").From("friend_apply_record").Where("uid=?", uid).Load(&cn)
+	return cn, err
+}
+
 func (d *friendDB) deleteApplyWithUidAndToUid(uid, toUid string) error {
 	_, err := d.session.DeleteFrom("friend_apply_record").Where("uid=? and to_uid=?", uid, toUid).Exec()
 	return err

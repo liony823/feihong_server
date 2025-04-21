@@ -46,13 +46,12 @@ func (cn *Common) Route(r *wkhttp.WKHttp) {
 		common.POST("/appversion", cn.addAppVersion)             // 添加APP版本
 		common.GET("/appversion/:os/:version", cn.getNewVersion) // 获取最新版本
 		common.GET("/appversion/list", cn.appVersionList)        // 版本列表
-		common.GET("/chatbg", cn.chatBgList)                     // 聊天背景列表
-		common.GET("/appmodule", cn.appModule)                   // app模块列表
+		common.GET("/chatbg", cn.chatBgList)                     // 聊天背景列表                // app模块列表
 	}
 	commonNoAuth := r.Group("/v1/common")
 	{
 		commonNoAuth.GET("/countries", cn.countriesList)
-
+		commonNoAuth.GET("/appmodule", cn.appModule)
 		commonNoAuth.GET("/appconfig", cn.appConfig)           // app配置
 		commonNoAuth.GET("/keepalive", cn.getKeepAliveVideo)   // 获取后台运行引导视频
 		commonNoAuth.GET("/updater/:os/:version", cn.updater)  // 版本更新检查（兼容tauri）

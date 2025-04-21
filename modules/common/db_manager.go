@@ -126,8 +126,6 @@ func (d *managerDB) insertSysMenu(m *sysMenuModel) (int64, error) {
 func (d *managerDB) updateSysMenu(m *sysMenuModel) error {
 	_, err := d.session.Update("sys_menu").SetMap(map[string]interface{}{
 		"name":           m.Name,
-		"desc":           m.Desc,
-		"status":         m.Status,
 		"icon":           m.Icon,
 		"sort":           m.Sort,
 		"parent_key":     m.ParentKey,
@@ -238,8 +236,6 @@ type sysMenuModel struct {
 	Key          string // 菜单key
 	Path         string // 菜单路径
 	Name         string // 菜单名称
-	Desc         string // 菜单描述
-	Status       int    // 菜单状态
 	Icon         string // 菜单图标
 	Sort         int    // 菜单排序
 	ParentKey    string // 父菜单key

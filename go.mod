@@ -46,7 +46,7 @@ require (
 
 require github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 
-replace github.com/TangSengDaoDao/TangSengDaoDaoServerLib => github.com/liony823/feihong_server_lib v1.0.0-202504161823
+replace github.com/TangSengDaoDao/TangSengDaoDaoServerLib => github.com/liony823/feihong_server_lib v1.0.0-202504211057
 
 require (
 	cloud.google.com/go v0.110.0 // indirect

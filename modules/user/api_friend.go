@@ -123,7 +123,7 @@ func (f *Friend) apply(c *wkhttp.Context) {
 	applys, err := f.db.queryApplysWithPage(loginUID, uint64(pageSize), uint64(pageIndex))
 	if err != nil {
 		f.Error("查询好友申请列表错误", zap.Error(err))
-		c.ResponseError(errors.New("查询好友申请列表错误"))
+		c.ResponseError(errors.New(common.ErrQueryFriendAppListFailed))
 		return
 	}
 	list := make([]*friendApplyResp, 0)
@@ -135,11 +135,11 @@ func (f *Friend) apply(c *wkhttp.Context) {
 		users, err := f.userService.GetUsers(uids)
 		if err != nil {
 			f.Error("查询申请用户信息错误", zap.Error(err))
-			c.ResponseError(errors.New("查询申请用户信息错误"))
+			c.ResponseError(errors.New(common.ErrQueryApplicantInfoFailed))
 			return
 		}
 		if len(users) == 0 {
-			c.ResponseError(errors.New("申请者不存在"))
+			c.ResponseError(errors.New(common.ErrApplicantNotExist))
 			return
 		}
 		for _, apply := range applys {
@@ -162,7 +162,18 @@ func (f *Friend) apply(c *wkhttp.Context) {
 			})
 		}
 	}
-	c.Response(list)
+
+	count, err := f.db.queryApplyCount(loginUID)
+	if err != nil {
+		f.Error("查询好友申请数量错误", zap.Error(err))
+		c.ResponseError(errors.New(common.ErrQueryFriendAppListFailed))
+		return
+	}
+
+	c.Response(map[string]interface{}{
+		"list":  list,
+		"count": count,
+	})
 }
 
 // 删除好友

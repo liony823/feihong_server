@@ -1,12 +1,49 @@
 -- +migrate Up
 
-create table `app_config`(
-    id   integer not null primary key AUTO_INCREMENT,
-    rsa_private_key varchar(4000)  not null default '',     -- 系统私钥 (使用来加密cmd类消息内容 防止前端模拟发送)
-    rsa_public_key varchar(4000)  not null default '',     -- 系统公钥
-    `version` integer   not null default 0,     -- 数据版本
-    super_token varchar(40)  not null default '', -- 超级token 用于操作一些系统api的安全校验
-    super_token_on smallint  not null default 0, -- 是否禁用super_token  0.禁用 1.开启 如果禁用 则一些需要super_token的API将不能使用 默认为禁用
-    created_at           timeStamp              not null DEFAULT CURRENT_TIMESTAMP,   -- 创建时间
-    updated_at           timeStamp              not null DEFAULT CURRENT_TIMESTAMP    -- 更新时间
-);
+CREATE TABLE `app_config` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `rsa_private_key` varchar(4000) NOT NULL DEFAULT '',
+  `rsa_public_key` varchar(4000) NOT NULL DEFAULT '',
+  `version` int NOT NULL DEFAULT '0',
+  `super_token` varchar(40) NOT NULL DEFAULT '',
+  `super_token_on` smallint NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `revoke_second` smallint NOT NULL DEFAULT '0' COMMENT '消息可撤回时长',
+  `welcome_message` varchar(2000) NOT NULL DEFAULT '' COMMENT '登录欢迎语',
+  `new_user_join_system_group` smallint NOT NULL DEFAULT '1' COMMENT '注册用户是否默认加入系统群',
+  `search_by_phone` smallint NOT NULL DEFAULT '0' COMMENT '是否可通过手机号搜索',
+  `register_invite_on` smallint NOT NULL DEFAULT '0' COMMENT '是否开启注册邀请',
+  `send_welcome_message_on` smallint NOT NULL DEFAULT '1' COMMENT '是否开启登录欢迎语',
+  `invite_system_account_join_group_on` smallint NOT NULL DEFAULT '0' COMMENT '是否开启系统账号进入群聊',
+  `register_user_must_complete_info_on` smallint NOT NULL DEFAULT '0' COMMENT '注册用户是否必须完善信息',
+  `channel_pinned_message_max_count` smallint NOT NULL DEFAULT '10' COMMENT '频道最多置顶消息数量',
+  `can_modify_api_url` smallint NOT NULL DEFAULT '0' COMMENT '是否能修改服务器地址',
+  `ip_white_list` varchar(1000) DEFAULT '127.0.0.1,localhost' COMMENT '后台IP白名单',
+  `login_type` smallint DEFAULT '4' COMMENT 'app登录类型：1-用户名+密码，2-手机号+密码，3-用户名+密码+手机号+密码，4-自动注册登录模式',
+  `sensitive_words` text COMMENT '敏感词，多个敏感词用英文的 | 符号分割',
+  `disable_change_device` smallint DEFAULT '0' COMMENT '是否禁止更换设备: 1 禁止、0 不禁止',
+  `signup_device_limit` smallint DEFAULT '0' COMMENT '设备限制注册限制数, 0为不限制',
+  `sigle_ip_register_limit_in12hour` smallint NOT NULL DEFAULT '0' COMMENT '单IP12小时注册限制数, 0为不限制',
+  `auto_clear_history_msg` smallint DEFAULT '0' COMMENT '自动清除几天前历史消息, 0 不自动清除',
+  `charge_and_payout_visible` smallint DEFAULT '1' COMMENT '充值和提现是否可见',
+  `signin_auth_code_visible` smallint DEFAULT '1' COMMENT '登录授权码是否可见',
+  `friend_online_status_visible` smallint DEFAULT '1' COMMENT '好友在线状态是否可见',
+  `mobile_msg_read_status_visible` smallint DEFAULT '1' COMMENT '手机消息已读状态是否可见',
+  `wallet_payout_min` smallint DEFAULT '0' COMMENT '钱包提现最小金额，单位为分，0为不限制',
+  `transfer_min_amount` smallint DEFAULT '0' COMMENT '转账最小金额，单位为分，0为不限制',
+  `mobile_edit_msg` smallint DEFAULT '1' COMMENT '手机端是否可以编辑消息',
+  `group_member_see_member` smallint DEFAULT '1' COMMENT '普通群成员是否可以查看其他群成员',
+  `msg_time_visible` smallint DEFAULT '1' COMMENT '消息时间是否可见',
+  `pinned_conversation_sync` smallint DEFAULT '1' COMMENT '置顶会话是否同步',
+  `only_internal_friend_add` smallint DEFAULT '0' COMMENT '仅内部号可被加好友及加非内部号好友',
+  `only_internal_friend_create_group` smallint DEFAULT '0' COMMENT '仅内部号可建群',
+  `only_internal_friend_send_group_red_envelope` smallint DEFAULT '0' COMMENT '仅内部号可发群红包',
+  `only_internal_friend_send_group_card` smallint DEFAULT '0' COMMENT '仅内部号可群内推送名片',
+  `only_internal_friend_group_robot_free_msg` smallint DEFAULT '0' COMMENT '群机器人免消息',
+  `group_member_limit` smallint DEFAULT '0' COMMENT '群人数限制: 0 不限制',
+  `user_agreement_content` text COMMENT '用户协议内容',
+  `privacy_policy_content` text COMMENT '隐私政策内容',
+  `login_background_media` VARCHAR(255)   NULL DEFAULT ''    COMMENT '登录背景媒体文件'
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

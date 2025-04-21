@@ -14,6 +14,32 @@ schemes:
 basePath: "/v1"
 
 paths:
+
+  /applet:
+    get:
+      tags:
+        - "common"
+      summary: "获取小程序列表"
+      description: "获取小程序列表"
+      operationId: "applet list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appletModel"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
   /manager/applet:
     get:
       tags:

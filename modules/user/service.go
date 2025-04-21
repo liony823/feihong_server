@@ -859,12 +859,13 @@ type UserDetailResp struct {
 	UID                 string            `json:"uid"`
 	Name                string            `json:"name"`
 	Username            string            `json:"username"`
-	Email               string            `json:"email,omitempty"`               // email（仅自己能看）
-	Zone                string            `json:"zone,omitempty"`                // 手机区号（仅自己能看）
-	Phone               string            `json:"phone,omitempty"`               // 手机号（仅自己能看）
-	Mute                int               `json:"mute"`                          // 免打扰
-	Top                 int               `json:"top"`                           // 置顶
-	Sex                 int               `json:"sex"`                           //性别1:男
+	Email               string            `json:"email,omitempty"` // email（仅自己能看）
+	Zone                string            `json:"zone,omitempty"`  // 手机区号（仅自己能看）
+	Phone               string            `json:"phone,omitempty"` // 手机号（仅自己能看）
+	Mute                int               `json:"mute"`            // 免打扰
+	Top                 int               `json:"top"`             // 置顶
+	Sex                 int               `json:"sex"`
+	Introduction        string            `json:"introduction"`                  //个人介绍
 	Category            string            `json:"category"`                      //用户分类 '客服'
 	ShortNo             string            `json:"short_no"`                      // 用户唯一短编号
 	ChatPwdOn           int               `json:"chat_pwd_on"`                   //是否开启聊天密码
@@ -944,6 +945,7 @@ func NewUserDetailResp(m *Detail, remark, loginUID string, sourceFrom string, on
 		Mute:              m.Mute,
 		Top:               m.Top,
 		Sex:               m.Sex,
+		Introduction:      m.Introduction,
 		ChatPwdOn:         m.ChatPwdOn,
 		Category:          m.Category,
 		ShortNo:           m.ShortNo,

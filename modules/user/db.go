@@ -164,6 +164,12 @@ func (d *DB) UpdateUsersWithField(field string, value string, uid string) error 
 	return err
 }
 
+// UpdateUsersWithFieldInt 修改用户基本资料
+func (d *DB) UpdateUsersWithFieldInt(field string, value int, uid string) error {
+	_, err := d.session.Update("user").Set(field, value).Where("uid=?", uid).Exec()
+	return err
+}
+
 // UpdateUserWithUpdatedAtUsername 修改用户名最后的修改时间
 func (d *DB) UpdateUserWithUpdatedAtUsername(value int64, uid string) error {
 	_, err := d.session.Update("user").Set("updated_at_username", value).Where("uid=?", uid).Exec()

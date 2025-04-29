@@ -624,93 +624,33 @@ func (u *User) userUpdateWithField(c *wkhttp.Context) {
 			c.ResponseOK()
 			return
 		}
-		// 修改用户名
-		if key == "username" {
-
-			// 检查用户名修改时间是否超过30天
-			if users.UpdatedAtUsername != nil {
-				lastUpdateTime := time.Unix(users.UpdatedAtUsername.Unix(), 0)
-				thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
-				if lastUpdateTime.After(thirtyDaysAgo) {
-					c.ResponseError(errors.New(common.ErrUpdateUsernameAtNotAllowed))
-					return
-				}
-			}
-
-			if len(fmt.Sprintf("%s", value)) < 6 || len(fmt.Sprintf("%s", value)) > 18 {
-				c.ResponseError(errors.New(common.ErrUsernameNotInvalid))
-				return
-			}
-
-			isLetter := true
-			for index, r := range fmt.Sprintf("%s", value) {
-				if !unicode.IsLetter(r) && index == 0 {
-					isLetter = false
-					break
-				}
-				if unicode.Is(unicode.Han, r) {
-					isLetter = false
-					break
-				}
-				if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '_' {
-					isLetter = false
-					break
-				}
-
-				if !isLetter {
-					c.ResponseError(errors.New(common.ErrUsernameNotInvalid))
-					return
-				}
-			}
-
-			user, err := u.db.QueryUserWithOnlyUsername(fmt.Sprintf("%s", value))
-			if err != nil {
-				u.Error("通过username查询用户失败！", zap.Error(err), zap.String("username", key))
-				c.ResponseError(errors.New(common.ErrQueryUserInfoFailed))
-				return
-			}
-
-			if user != nil {
-				c.ResponseError(errors.New(common.ErrUsernameExist))
-				return
-			}
-
-			tx, err := u.db.session.Begin()
-			if err != nil {
-				u.Error("创建事务失败！", zap.Error(err))
-				c.ResponseError(errors.New(common.ErrCreateTransactionFailed))
-				return
-			}
-			defer func() {
-				if err := recover(); err != nil {
-					tx.Rollback()
-					panic(err)
-				}
-			}()
-
-			err = u.db.UpdateUsersWithField(key, fmt.Sprintf("%s", value), loginUID)
-			if err != nil {
+		// 修改性别
+		if key == "sex" {
+			var sexValue int
+			switch v := value.(type) {
+			case float64:
+				sexValue = int(v)
+			case int:
+				sexValue = v
+			default:
+				u.Error("修改性别失败，不是合法值", zap.Any("sex", value))
 				c.ResponseError(errors.New(common.ErrUpdateUserInfoFailed))
-				tx.Rollback()
 				return
 			}
-			err = u.db.UpdateUserWithUpdatedAtUsername(time.Now().Unix(), loginUID)
-			if err != nil {
-				u.Error("修改用户资料失败", zap.Error(err), zap.Any(key, value))
-				c.ResponseError(errors.New(common.ErrUpdateUserInfoFailed))
-				tx.Rollback()
-				return
-			}
-			err = tx.Commit()
-			if err != nil {
-				u.Error("数据库事物提交失败", zap.Error(err))
-				c.ResponseError(errors.New(common.ErrCommitTransactionFailed))
-				tx.Rollback()
-				return
-			}
-			c.ResponseOK()
-			return
 
+			if sexValue != 0 && sexValue != 1 && sexValue != 2 {
+				u.Error("修改性别失败，不是合法值", zap.Any("sex", sexValue))
+				c.ResponseError(errors.New(common.ErrUpdateUserInfoFailed))
+				return
+			}
+
+			err = u.db.UpdateUsersWithFieldInt(key, sexValue, loginUID)
+			if err != nil {
+				u.Error("修改用户资料失败", zap.Error(err))
+				c.ResponseError(errors.New(common.ErrUpdateUserInfoFailed))
+				return
+			}
+			break
 		}
 		//修改用户信息
 		if key == "name" && value != nil && value.(string) == "" { // 修改名字

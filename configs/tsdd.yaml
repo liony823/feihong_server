@@ -31,8 +31,8 @@ db:
 
 ##################### 外网配置 ####################
 external:
- ip: "127.0.0.1" # 外网ip
- baseURL: "http://127.0.0.1:8090" # 外网访问地址 例如 http://10.2.3.1:8090
+ ip: "192.168.1.160" # 外网ip
+ baseURL: "http://192.168.1.160:8090" # 外网访问地址 例如 http://10.2.3.1:8090
 #  webLoginURL: "" # web im的登录地址 例如 https://web.tangsengdaodao.com
 
 ##################### 日志配置 ####################
@@ -61,7 +61,7 @@ smsProvider: "aliyun" # 短信服务商. 例如: aliyun or unisms
 ##################### 文件服务 ####################
 fileService: "minio" # 文件服务 minio or aliyunOSS or seaweedFS or qiniu
 minio: # minio配置
- url: "http://127.0.0.1:9000" # minio地址 格式：http://xx.xx.xx.xx:9000
+ url: "http://192.168.1.160:9000" # minio地址 格式：http://xx.xx.xx.xx:9000
  accessKeyID: "admin" # minio accessKeyID
  secretAccessKey: "12345678"  # minio secretAccessKey
 #oss:  # aliyun oss配置
